@@ -49,6 +49,9 @@
         <resilience4j.version>2.4.0</resilience4j.version>
         <!-- Boot 4.0.8 manages 11.0.24; 11.0.25 fixes the August 2026 advisories. -->
         <tomcat.version>11.0.25</tomcat.version>
+        <!-- Keep both Jackson lines on patched releases within their current minor. -->
+        <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+        <jackson-bom.version>3.1.7</jackson-bom.version>
         <postgresql.version>42.7.12</postgresql.version>
         <grpc.version>1.75.0</grpc.version>
         <!-- OTel's generated classes require >= 4.32; keep protoc and runtime aligned. -->
