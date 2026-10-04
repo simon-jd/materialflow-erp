@@ -80,6 +80,7 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
+          limit-severities-for-sarif: true
           exit-code: '1'
       - name: Preserve image scan evidence
         if: always() && hashFiles('trivy-results.sarif') != ''
