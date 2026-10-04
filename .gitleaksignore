@@ -1,0 +1,12 @@
+# Verified file SHA256 values in historical evidence; these are not credentials.
+# Each exception binds the immutable commit, path, rule and line. New findings remain scanned.
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07/baseline-manifest.json:generic-api-key:91
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07/baseline-manifest.json:generic-api-key:235
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07-qualification/source-manifest.json:generic-api-key:122
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07-qualification/source-manifest.json:generic-api-key:154
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07-qualification/source-manifest.json:generic-api-key:354
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07-qualification/source-manifest.json:generic-api-key:383
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-06/source-manifest.json:generic-api-key:107
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-06/source-manifest.json:generic-api-key:136
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07/source-manifest.json:generic-api-key:115
+b1fdd8b565f96a100e36db30fa0899c8a70e28cf:docs/evidence/local-2026-09-07/source-manifest.json:generic-api-key:144
