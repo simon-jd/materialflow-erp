@@ -50,7 +50,7 @@
         <!-- Boot 4.0.8 manages 11.0.24; 11.0.25 fixes the August 2026 advisories. -->
         <tomcat.version>11.0.25</tomcat.version>
         <postgresql.version>42.7.12</postgresql.version>
-        <grpc.version>1.75.0</grpc.version>
+        <grpc.version>1.84.0</grpc.version>
         <!-- OTel's generated classes require >= 4.32; keep protoc and runtime aligned. -->
         <protobuf.version>4.33.5</protobuf.version>
         <jacoco.version>0.8.13</jacoco.version>
