@@ -1,0 +1,75 @@
+rule_files:
+  - alerts.yml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'outbox_dead_letter_count{instance="relay-a"}'
+        values: '1 1 1 1 1 1 1'
+      - series: 'outbox_dead_letter_count{instance="relay-b"}'
+        values: '1 1 1 1 1 1 1'
+      - series: 'outbox_dead_letter_total{instance="relay-a"}'
+        values: '0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: OutboxDeadLetterDetected
+        exp_alerts:
+          - exp_labels: {severity: critical}
+            exp_annotations: {summary: "Outbox dead letters require review; delivery may have occurred"}
+  - interval: 1m
+    input_series:
+      - series: 'outbox_dead_letter_count{instance="relay-a"}'
+        values: '0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: OutboxDeadLetterDetected
+        exp_alerts: []
+  - interval: 1m
+    input_series:
+      - series: 'event_consumer_failure_total{reason="database",instance="core-a"}'
+        values: '0 1 2 3 4 5 6 7 8 9 10 11 12'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: DomainConsumerDatabaseRetrying
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: DomainConsumerDatabaseRetrying
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: "Consumer database retries persist; inspect database health, lag and retention headroom"}
+  - interval: 1m
+    input_series:
+      - series: 'event_consumer_failure_total{reason="invalid",instance="core-a"}'
+        values: '0 1 2 3 4 5 6 7'
+      - series: 'event_consumer_recovery_failed_total{instance="core-a"}'
+        values: '0 1 1 1 1 1 1 1'
+      - series: 'event_consumer_recovered_total{reason="invalid",instance="core-a"}'
+        values: '0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: DomainConsumerRecoveryFailed
+        exp_alerts:
+          - exp_labels: {severity: critical}
+            exp_annotations: {summary: "Consumer DLQ publication failed; source offsets remain blocked"}
+      - eval_time: 7m
+        alertname: DomainConsumerRecoveryFailed
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: DomainConsumerDatabaseRetrying
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: DomainConsumerRecordQuarantined
+        exp_alerts: []
+  - interval: 1m
+    input_series:
+      - series: 'event_consumer_recovered_total{reason="invalid",instance="core-a"}'
+        values: '0 0 1 1 0 1 1 1'
+    alert_rule_test:
+      - eval_time: 0m
+        alertname: DomainConsumerRecordQuarantined
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: DomainConsumerRecordQuarantined
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: "Consumer records reached DLQ; inspect and deliberately replay after repair"}

@@ -1,0 +1,132 @@
+[
+  {
+    "service": "edge-gateway",
+    "image": "materialflow-qualification/edge-gateway:boot3",
+    "image_id": "sha256:e9d4d5b2161d456ca36b6896d5eef4d7d5822356980418c944dee12463b8df42",
+    "user": "10001:10001",
+    "read_only": true,
+    "cpus": 2.0,
+    "memory_bytes": 1073741824,
+    "state": "running"
+  },
+  {
+    "service": "event-relay",
+    "image": "materialflow-qualification/event-relay:boot3",
+    "image_id": "sha256:956534889734162bf9651fcef66ea438cefb23827cb76c482f5842056a7f591d",
+    "user": "10001:10001",
+    "read_only": true,
+    "cpus": 2.0,
+    "memory_bytes": 1073741824,
+    "state": "running"
+  },
+  {
+    "service": "erp-core",
+    "image": "materialflow-qualification/erp-core:boot3",
+    "image_id": "sha256:2cc37495e90d20d428517ebdbd02ffe708452ac64cc80bb069f0dfae7b2be3b3",
+    "user": "10001:10001",
+    "read_only": true,
+    "cpus": 2.0,
+    "memory_bytes": 1073741824,
+    "state": "running"
+  },
+  {
+    "service": "stream-projection",
+    "image": "materialflow-qualification/stream-projection:boot3",
+    "image_id": "sha256:552acf4d5bad57b55058daec871f649d1b0c1ff76b479ccaae774d5032db15c7",
+    "user": "10001:10001",
+    "read_only": true,
+    "cpus": 2.0,
+    "memory_bytes": 1073741824,
+    "state": "running"
+  },
+  {
+    "service": "grafana",
+    "image": "grafana/grafana:12.2.0",
+    "image_id": "sha256:74144189b38447facf737dfd0f3906e42e0776212bf575dc3334c3609183adf7",
+    "user": "472",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "otel-collector",
+    "image": "otel/opentelemetry-collector-contrib:0.135.0",
+    "image_id": "sha256:89107a3a8f4636a396927edf7025bb9614b8da2d92f4cc3f43109e8d115736e2",
+    "user": "10001:10001",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "postgres",
+    "image": "postgres:17.11-alpine",
+    "image_id": "sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73",
+    "user": "",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "redis",
+    "image": "redis:8.2.1-alpine",
+    "image_id": "sha256:987c376c727652f99625c7d205a1cba3cb2c53b92b0b62aade2bd48ee1593232",
+    "user": "",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "kafka",
+    "image": "apache/kafka:4.1.2",
+    "image_id": "sha256:5cc2a2fd93fa2687b44015eee04fb2c3edd9e526bd64bf8bec5ff1e268772e0e",
+    "user": "appuser",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "jaeger",
+    "image": "jaegertracing/jaeger:2.10.0",
+    "image_id": "sha256:8c593d8048d86334eb52dba26633b6c846b8ecbe5c22905702c932ae97baeb42",
+    "user": "10001",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "prometheus",
+    "image": "prom/prometheus:v3.6.0",
+    "image_id": "sha256:76947e7ef22f8a698fc638f706685909be425dbe09bd7a2cd7aca849f79b5f64",
+    "user": "nobody",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "keycloak",
+    "image": "quay.io/keycloak/keycloak:26.3.3",
+    "image_id": "sha256:6a7217a100bd3e5de4063a27a538ef999a3c5a88c4b4ec0ffc0a642aee7b2597",
+    "user": "1000",
+    "read_only": false,
+    "cpus": 0.0,
+    "memory_bytes": 0,
+    "state": "running"
+  },
+  {
+    "service": "integration-adapter",
+    "image": "materialflow-qualification/integration-adapter:boot3",
+    "image_id": "sha256:f2a36e317e1f9784893a1b84d58365cab6c2e7e5416327716be7ae7a889054d4",
+    "user": "10001:10001",
+    "read_only": true,
+    "cpus": 2.0,
+    "memory_bytes": 1073741824,
+    "state": "running"
+  }
+]

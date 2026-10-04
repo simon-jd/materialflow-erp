@@ -1,0 +1,16 @@
+{
+  "run": 1,
+  "samples": 1803,
+  "successes": 1803,
+  "errors": 0,
+  "timeouts": 0,
+  "duration_ms": 179953,
+  "first_sample_ms": 1788824688014,
+  "last_completion_ms": 1788824867967,
+  "p50_ms": 12,
+  "p95_ms": 22,
+  "p99_ms": 35,
+  "throughput_rps": 10.019282812734437,
+  "error_rate_percent": 0.0,
+  "timeout_rate_percent": 0.0
+}

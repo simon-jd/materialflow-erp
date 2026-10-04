@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-09-07T23:56:39.224129+00:00",
+  "scope": "After performance and before fault injection",
+  "database": {
+    "orders": 7219,
+    "outbox_published": 7219,
+    "outbox_not_published": 0,
+    "inbox": 7219,
+    "fixture_triggers": 0,
+    "lock_waiters": 0
+  },
+  "domain_end_offset": 7219,
+  "consumer_groups": "GROUP                    TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                              HOST            CLIENT-ID\nerp-core-reallocation-v1 materialflow.domain-events.v1 0          7219            7219            0               consumer-erp-core-reallocation-v1-1-248d3402-fcee-451e-8e3e-f8b3194c620f /172.29.0.11    consumer-erp-core-reallocation-v1-1\n\nGROUP                      TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                                                                  HOST            CLIENT-ID\nmaterialflow-projection-v1 materialflow.domain-events.v1 0          7219            7219            0               materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer-13e91b91-c09d-4810-abbf-8ac40465bb4b /172.29.0.12    materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer",
+  "limitations": "Specific local eventual drain assertion, not an event latency SLA or all inventory invariants"
+}

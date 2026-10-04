@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.materialflow</groupId><artifactId>materialflow-erp</artifactId>
+        <version>0.1.0-SNAPSHOT</version><relativePath>../../pom.xml</relativePath>
+    </parent>
+    <artifactId>erp-core</artifactId>
+    <name>MaterialFlow :: ERP Core</name>
+    <dependencies>
+        <dependency><groupId>com.materialflow</groupId><artifactId>materialflow-contracts</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>identity-org</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>master-data</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>pricing-contract</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>sales-order</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>customer-credit</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>approval-workflow</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>inventory</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>procurement</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>fulfillment</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>billing-reconciliation</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.materialflow</groupId><artifactId>audit-outbox</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
+        <dependency><groupId>org.mybatis.spring.boot</groupId><artifactId>mybatis-spring-boot-starter</artifactId><version>${mybatis-spring-boot.version}</version></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-kafka</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+        <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-registry-prometheus</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-opentelemetry</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-flyway</artifactId></dependency>
+        <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
+        <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-test</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-kafka</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version><scope>test</scope></dependency>
+    </dependencies>
+    <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
+</project>

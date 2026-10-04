@@ -1,0 +1,17 @@
+{
+  "uid": "materialflow-overview",
+  "title": "MaterialFlow ERP Overview",
+  "schemaVersion": 41,
+  "version": 2,
+  "refresh": "10s",
+  "time": {"from": "now-1h", "to": "now"},
+  "panels": [
+    {"id": 1, "type": "timeseries", "title": "HTTP p95 latency", "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}, "targets": [{"expr": "histogram_quantile(0.95, sum by (le, application) (rate(http_server_requests_seconds_bucket[5m])))", "legendFormat": "{{application}}"}]},
+    {"id": 2, "type": "timeseries", "title": "HTTP 5xx rate", "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}, "targets": [{"expr": "sum by (application) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))", "legendFormat": "{{application}}"}]},
+    {"id": 3, "type": "stat", "title": "Outbox pending", "gridPos": {"x": 0, "y": 8, "w": 6, "h": 5}, "targets": [{"expr": "outbox_pending_count"}]},
+    {"id": 4, "type": "stat", "title": "Oldest outbox age (s)", "gridPos": {"x": 6, "y": 8, "w": 6, "h": 5}, "targets": [{"expr": "outbox_oldest_event_age_seconds"}]},
+    {"id": 5, "type": "timeseries", "title": "Hikari active/pending", "gridPos": {"x": 12, "y": 8, "w": 12, "h": 5}, "targets": [{"expr": "hikaricp_connections_active", "legendFormat": "active"}, {"expr": "hikaricp_connections_pending", "legendFormat": "pending"}]},
+    {"id": 6, "type": "stat", "title": "Outbox dead letters requiring review", "gridPos": {"x": 0, "y": 13, "w": 12, "h": 5}, "targets": [{"expr": "max(outbox_dead_letter_count)"}]},
+    {"id": 7, "type": "timeseries", "title": "Rejected stale Relay completions", "gridPos": {"x": 12, "y": 13, "w": 12, "h": 5}, "targets": [{"expr": "sum(rate(outbox_claim_lost_total[5m]))"}]}
+  ]
+}

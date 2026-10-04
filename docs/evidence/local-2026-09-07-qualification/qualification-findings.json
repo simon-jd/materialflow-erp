@@ -1,0 +1,46 @@
+{
+  "scope": "Observed during this local qualification; no production incidents",
+  "findings": [
+    {
+      "issue": "Protobuf gencode/runtime mismatch",
+      "observed": "Initial clean verify failed adapter context: OTel gencode 4.32.0 with runtime 4.31.1",
+      "change": "Align protoc/runtime 4.33.5; retain gRPC API",
+      "verification": "Final real gRPC/context tests and runtime smoke"
+    },
+    {
+      "issue": "Tomcat patch advisories",
+      "observed": "Initial application scans reported three Critical-rated findings in 11.0.24",
+      "change": "Pin 11.0.25",
+      "verification": "Exact final app images rescanned; DB timestamp and limits in image-scan-summary.json"
+    },
+    {
+      "issue": "Streams input topic missing on empty broker",
+      "observed": "First fresh Compose projection reached ERROR with MissingSourceTopicException; raw original container log was not retained before recreation",
+      "change": "Idempotent kafka-init plus service_completed_successfully dependencies",
+      "verification": "Fresh final Compose startup order and successful projection read"
+    },
+    {
+      "issue": "Kafka 4 producer default invalidated timeout pair",
+      "observed": {
+        "id": "b43e3a3b-e6ba-4133-af7f-5ebb827c7da8",
+        "status": "DEAD_LETTER",
+        "attempt_count": 8,
+        "last_error": "ConfigException: delivery.timeout.ms should be equal to or larger than linger.ms + request.timeout.ms"
+      },
+      "change": "Explicit linger.ms=0 for one-record-at-a-time Relay; recovery test binds production YAML",
+      "verification": "Final Kafka recovery test and end-to-end publish/consume trace"
+    },
+    {
+      "issue": "Cold consumer group behavior had only test-local earliest setting",
+      "observed": "Prior fixture duplicated consumer settings; application inherited latest reset policy",
+      "change": "Use configured factory in all recovery scenarios; explicitly earliest; test message published before group startup",
+      "verification": "newConsumerGroupReplaysEventsPublishedBeforeItStarts"
+    },
+    {
+      "issue": "Legacy hash compatibility needed qualification",
+      "observed": "Actual old persisted create-order record replayed successfully under Boot 4 without duplicate order",
+      "change": "Add regression fixture/test; no unproven mapper compatibility switch",
+      "verification": "legacy-compatibility.json"
+    }
+  ]
+}

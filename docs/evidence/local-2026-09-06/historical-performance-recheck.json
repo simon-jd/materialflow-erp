@@ -1,0 +1,37 @@
+{
+  "rechecked_at": "2026-09-06",
+  "scope": "historical artifacts only; no new load run; no post-change throughput claim",
+  "aggregate_sha256": "a7d3a7ee2bd9bde0ca7a5af2c1c9b489c4c8084237200f104707344c47f7e2a1",
+  "runs": [
+    {
+      "run": 1,
+      "samples": 12003,
+      "errors": 0,
+      "p50_nearest_rank_ms": 19,
+      "p95_nearest_rank_ms": 37,
+      "p99_nearest_rank_ms": 46,
+      "sha256": "1c07e8783be1ea19db86dd90af579cc69a2753ddf29b1eef7f745e6c9a649ef0",
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-1-measurement.jtl.gz"
+    },
+    {
+      "run": 2,
+      "samples": 12003,
+      "errors": 0,
+      "p50_nearest_rank_ms": 20,
+      "p95_nearest_rank_ms": 36,
+      "p99_nearest_rank_ms": 44,
+      "sha256": "185ef2166c5f69bd54a13a031aa082d44a7cc486706a2d4bfc056dd45986b5a9",
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-2-measurement.jtl.gz"
+    },
+    {
+      "run": 3,
+      "samples": 12003,
+      "errors": 0,
+      "p50_nearest_rank_ms": 19,
+      "p95_nearest_rank_ms": 35,
+      "p99_nearest_rank_ms": 43,
+      "sha256": "4be85b8b40ccc06f55003d121937048a786908415165fc30215e7fa7f654f77c",
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-3-measurement.jtl.gz"
+    }
+  ]
+}

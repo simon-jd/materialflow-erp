@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: materialflow-runtime
+  labels:
+    {{- include "materialflow.labels" . | nindent 4 }}
+data:
+  MATERIALFLOW_DB_URL: {{ .Values.config.postgresUrl | quote }}
+  POSTGRES_URL: {{ .Values.config.postgresUrl | quote }}
+  MATERIALFLOW_REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  MATERIALFLOW_KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.kafkaBootstrapServers | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.kafkaBootstrapServers | quote }}
+  MATERIALFLOW_KAFKA_CONSUMER_ENABLED: "true"
+  ERP_CORE_URI: {{ .Values.config.erpCoreUri | quote }}
+  PROJECTION_URI: {{ .Values.config.projectionUri | quote }}
+  OIDC_ISSUER_URI: {{ .Values.config.oidcIssuerUri | quote }}
+  OIDC_JWK_SET_URI: {{ .Values.config.oidcJwkSetUri | quote }}
+  MATERIALFLOW_SECURITY_ENABLED: {{ .Values.config.securityEnabled | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.global.otelEndpoint | quote }}

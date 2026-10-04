@@ -1,0 +1,80 @@
+{
+  "project": "materialflow-qualification-final",
+  "topic_init": {
+    "exit_code": 0,
+    "finished_at": "2026-09-07T23:41:46.072876517Z",
+    "dependent_apps_started_after_init": true
+  },
+  "applications": [
+    {
+      "service": "erp-core",
+      "image": "materialflow-qualification/erp-core:boot4",
+      "image_id": "sha256:d336a8f265fa017922219d5b587c6913d9c33fabfd2c095bb29855e0cd612640",
+      "container_id": "c9c57250e94a2d2782eb32c26569d69c403b073192ae63ab3effbcf037124abc",
+      "jar_sha256": "becbba35ee5c716771a3915fc91ef8940ece1887127b39a5659e69c16c0a4e0a",
+      "running_jar_matches_verified_build": true,
+      "user": "10001:10001",
+      "read_only": true,
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "started_at": "2026-09-07T23:41:46.631860318Z",
+      "scan_high_critical": 0
+    },
+    {
+      "service": "event-relay",
+      "image": "materialflow-qualification/event-relay:boot4",
+      "image_id": "sha256:0ff6bd9881067f2b013bd4077f377954086c76c4c4c5e1f81ee8722c4de1d112",
+      "container_id": "940ae1a9b39dc2f08ecdb5cf6d0ccbce3575cc2b567d026cd22815e087ae32f7",
+      "jar_sha256": "e7a42f4dcddfc2d3b5d6325e8c9aea0351d4bfb9dac8594f43e4c08f12cc5c7f",
+      "running_jar_matches_verified_build": true,
+      "user": "10001:10001",
+      "read_only": true,
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "started_at": "2026-09-07T23:41:46.627965417Z",
+      "scan_high_critical": 0
+    },
+    {
+      "service": "edge-gateway",
+      "image": "materialflow-qualification/edge-gateway:boot4",
+      "image_id": "sha256:2734dea5cd34e87e6781aada7a040e495c6c32985db3b64982ad3aa6e9df6520",
+      "container_id": "12235dd8103b2baf1b631b61242696c7f08d5a07f2d4e54fef9cf1f915093025",
+      "jar_sha256": "1f2387cece728aa545ef3d0c71233326da865e04ff3e20378e607208ed12a405",
+      "running_jar_matches_verified_build": true,
+      "user": "10001:10001",
+      "read_only": true,
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "started_at": "2026-09-07T23:41:47.59144372Z",
+      "scan_high_critical": 0
+    },
+    {
+      "service": "stream-projection",
+      "image": "materialflow-qualification/stream-projection:boot4",
+      "image_id": "sha256:67e1b0a3b840f4a68433a5695502257ad21acb711be59b01ac341a81dce973f0",
+      "container_id": "e7e9817fda47731dd5e706b71469ef145ffe0fa90f8f3bfb13cd924b42b20573",
+      "jar_sha256": "569b2545567c8c4344e3239f0b8f4f4f32b1fbb1f46a2e3e288de3d88c1f81d1",
+      "running_jar_matches_verified_build": true,
+      "user": "10001:10001",
+      "read_only": true,
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "started_at": "2026-09-07T23:41:46.60075139Z",
+      "scan_high_critical": 0
+    },
+    {
+      "service": "integration-adapter",
+      "image": "materialflow-qualification/integration-adapter:boot4",
+      "image_id": "sha256:beea52458a35ba14c24d5944eb127112effa5b04333abbb3141909383bb29fc0",
+      "container_id": "8cf2aab75d4ec773d8cdaa7fea0e24b984a8efb13a842a2ab5d4ab73b9996e33",
+      "jar_sha256": "4de5f992d11975f1115ce6a56d13863f2f1bcc49ddf0ddde0eaff7256f3cd9eb",
+      "running_jar_matches_verified_build": true,
+      "user": "10001:10001",
+      "read_only": true,
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "started_at": "2026-09-07T23:41:30.438904797Z",
+      "scan_high_critical": 0
+    }
+  ]
+}

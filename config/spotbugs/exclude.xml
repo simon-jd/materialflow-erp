@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- JMH generates sampling-loop bytecode that intentionally trips DLS_DEAD_LOCAL_STORE. -->
+    <Match>
+        <Class name="~com\.materialflow\.performance\.jmh_generated\..*"/>
+    </Match>
+</FindBugsFilter>

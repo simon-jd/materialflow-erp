@@ -1,0 +1,225 @@
+name: materialflow
+
+x-app-defaults: &app-defaults
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: [no-new-privileges:true]
+  networks: [materialflow]
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_DB: materialflow
+      POSTGRES_USER: materialflow
+      POSTGRES_PASSWORD: materialflow
+    ports: ["${MATERIALFLOW_POSTGRES_PORT:-5432}:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U materialflow -d materialflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [materialflow]
+
+  redis:
+    image: redis:8.2.1-alpine
+    command: [redis-server, --appendonly, "yes", --maxmemory, 256mb, --maxmemory-policy, allkeys-lru]
+    ports: ["${MATERIALFLOW_REDIS_PORT:-6379}:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [materialflow]
+
+  kafka:
+    image: apache/kafka:4.1.2
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:${MATERIALFLOW_KAFKA_PORT:-29092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports: ["${MATERIALFLOW_KAFKA_PORT:-29092}:29092"]
+    volumes: [kafka-data:/var/lib/kafka/data]
+    healthcheck:
+      test: [CMD-SHELL, "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [materialflow]
+
+  kafka-init:
+    image: apache/kafka:4.1.2
+    restart: "no"
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        for topic in materialflow.domain-events.v1 materialflow.domain-events.v1.DLQ materialflow.projection-dlq.v1; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+            --create --if-not-exists --topic "$$topic" --partitions 1 --replication-factor 1
+        done
+    depends_on:
+      kafka: {condition: service_healthy}
+    networks: [materialflow]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    command: [start-dev, --import-realm, --health-enabled=true]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: synthetic-local-admin
+      KC_HOSTNAME: http://localhost:${MATERIALFLOW_KEYCLOAK_PORT:-8180}
+    ports: ["${MATERIALFLOW_KEYCLOAK_PORT:-8180}:8080"]
+    volumes:
+      - ./keycloak/materialflow-realm.json:/opt/keycloak/data/import/materialflow-realm.json:ro
+    networks: [materialflow]
+
+  jaeger:
+    image: jaegertracing/jaeger:2.10.0
+    ports: ["${MATERIALFLOW_JAEGER_PORT:-16686}:16686", "${MATERIALFLOW_JAEGER_OTLP_PORT:-14317}:4317"]
+    networks: [materialflow]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.135.0
+    command: [--config=/etc/otelcol-contrib/config.yaml]
+    volumes:
+      - ./otel/collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports: ["${MATERIALFLOW_OTLP_GRPC_PORT:-4317}:4317", "${MATERIALFLOW_OTLP_HTTP_PORT:-4318}:4318", "${MATERIALFLOW_OTEL_METRICS_PORT:-8889}:8889"]
+    depends_on: [jaeger]
+    networks: [materialflow]
+
+  prometheus:
+    image: prom/prometheus:v3.6.0
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.retention.time=7d]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports: ["${MATERIALFLOW_PROMETHEUS_PORT:-9095}:9090"]
+    networks: [materialflow]
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: synthetic-local-admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ["${MATERIALFLOW_GRAFANA_PORT:-3000}:3000"]
+    depends_on: [prometheus]
+    networks: [materialflow]
+
+  erp-core:
+    <<: *app-defaults
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args: {MODULE: apps/erp-core}
+    environment:
+      MATERIALFLOW_DB_URL: jdbc:postgresql://postgres:5432/materialflow
+      MATERIALFLOW_DB_USER: materialflow
+      MATERIALFLOW_DB_PASSWORD: materialflow
+      MATERIALFLOW_REDIS_HOST: redis
+      MATERIALFLOW_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MATERIALFLOW_KAFKA_CONSUMER_ENABLED: "true"
+      MATERIALFLOW_SECURITY_ENABLED: ${MATERIALFLOW_SECURITY_ENABLED:-false}
+      OIDC_ISSUER_URI: http://localhost:${MATERIALFLOW_KEYCLOAK_PORT:-8180}/realms/materialflow
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/materialflow/protocol/openid-connect/certs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports: ["${MATERIALFLOW_ERP_PORT:-8080}:8080"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      kafka: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+
+  event-relay:
+    <<: *app-defaults
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args: {MODULE: apps/event-relay}
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/materialflow
+      POSTGRES_USER: materialflow
+      POSTGRES_PASSWORD: materialflow
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports: ["${MATERIALFLOW_RELAY_PORT:-8084}:8084"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      kafka: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+
+  stream-projection:
+    <<: *app-defaults
+    # RocksDB loads its JNI library from java.io.tmpdir; this service alone needs exec on tmpfs.
+    tmpfs: ["/tmp:rw,exec,nosuid,nodev,size=256m,mode=1777"]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args: {MODULE: apps/stream-projection}
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_STREAMS_STATE_DIR: /tmp/materialflow-kafka-streams
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports: ["${MATERIALFLOW_PROJECTION_PORT:-8082}:8082"]
+    depends_on:
+      kafka: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+
+  integration-adapter:
+    <<: *app-defaults
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args: {MODULE: apps/integration-adapter}
+    environment:
+      GRPC_CLIENT_HOST: integration-adapter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports: ["${MATERIALFLOW_INTEGRATION_PORT:-8083}:8083", "${MATERIALFLOW_GRPC_PORT:-9090}:9090"]
+
+  edge-gateway:
+    <<: *app-defaults
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args: {MODULE: apps/edge-gateway}
+    environment:
+      REDIS_HOST: redis
+      ERP_CORE_URI: http://erp-core:8080
+      PROJECTION_URI: http://stream-projection:8082
+      MATERIALFLOW_SECURITY_ENABLED: ${MATERIALFLOW_SECURITY_ENABLED:-false}
+      OIDC_ISSUER_URI: http://localhost:${MATERIALFLOW_KEYCLOAK_PORT:-8180}/realms/materialflow
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/materialflow/protocol/openid-connect/certs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports: ["${MATERIALFLOW_GATEWAY_PORT:-8081}:8081"]
+    depends_on:
+      redis: {condition: service_healthy}
+      erp-core: {condition: service_started}
+
+volumes:
+  postgres-data:
+  redis-data:
+  kafka-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  materialflow:
+    driver: bridge

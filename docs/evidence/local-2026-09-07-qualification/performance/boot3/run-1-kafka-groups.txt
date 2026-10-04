@@ -1,0 +1,5 @@
+
+GROUP                    TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                              HOST            CLIENT-ID
+erp-core-reallocation-v1 materialflow.domain-events.v1 0          2407            2407            0               consumer-erp-core-reallocation-v1-1-a659555a-3760-4a91-8999-e29f24c08884 /172.27.0.12    consumer-erp-core-reallocation-v1-1
+
+Consumer group 'materialflow-projection-v1' has no active members.

@@ -1,0 +1,455 @@
+{
+  "recorded_at": "2026-09-07T22:42:36.691007+00:00",
+  "command": "mvn -o -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 clean verify",
+  "totals": {
+    "tests": 53,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.ArchitectureRulesTest.xml",
+      "name": "com.materialflow.erp.ArchitectureRulesTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 1.095,
+      "cases": [
+        {
+          "name": "DOMAIN_IS_FRAMEWORK_INDEPENDENT",
+          "passed": true
+        },
+        {
+          "name": "CONTROLLERS_DO_NOT_ACCESS_PERSISTENCE",
+          "passed": true
+        },
+        {
+          "name": "TRANSACTIONS_LIVE_ON_APPLICATION_SERVICES",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.events.DomainEventConsumerRecoveryIntegrationTest.xml",
+      "name": "com.materialflow.erp.events.DomainEventConsumerRecoveryIntegrationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 43.366,
+      "cases": [
+        {
+          "name": "poisonIsQuarantinedOnceAndTheFollowingValidRecordCommits",
+          "passed": true
+        },
+        {
+          "name": "invalidInventoryIdentityRollsBackInboxBeforeQuarantine",
+          "passed": true
+        },
+        {
+          "name": "databaseLockOutlivesOldRetryBudgetWithoutDeadLetterOrOffsetAdvance",
+          "passed": true
+        },
+        {
+          "name": "unavailableDlqRetainsOffsetAcrossConsumerRestartThenRecovers",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.events.DomainEventFailurePolicyTest.xml",
+      "name": "com.materialflow.erp.events.DomainEventFailurePolicyTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.23,
+      "cases": [
+        {
+          "name": "connectionAndTransactionAcquisitionFailuresAreRecoverableButBadSqlIsNot",
+          "passed": true
+        },
+        {
+          "name": "malformedAndMissingIdentityAreTypedBeforeAnyDatabaseWrite",
+          "passed": true
+        },
+        {
+          "name": "databaseBackoffSurvivesTheOldBudgetAndCapsItsInterval",
+          "passed": true
+        },
+        {
+          "name": "postgresLockSqlStateIsRecognizedEvenWhenSpringLeavesItUncategorized",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.BusinessFlowIntegrationTest.xml",
+      "name": "com.materialflow.erp.integration.BusinessFlowIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 2.855,
+      "cases": [
+        {
+          "name": "orderToCashAndProcurementToReceiptAreIdempotentEndToEnd",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.CreditAndApprovalConcurrencyIntegrationTest.xml",
+      "name": "com.materialflow.erp.integration.CreditAndApprovalConcurrencyIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 2.41,
+      "cases": [
+        {
+          "name": "concurrentApprovalAndCreditReservationAllowOnlyLegalWinners",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.OrderConcurrencyIntegrationTest.xml",
+      "name": "com.materialflow.erp.integration.OrderConcurrencyIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 2.971,
+      "cases": [
+        {
+          "name": "migrationsIdempotencyAndConcurrentHotSkuReservationsPreserveInvariants",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.ReservationExpiryShipmentRaceIntegrationTest.xml",
+      "name": "com.materialflow.erp.integration.ReservationExpiryShipmentRaceIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 2.59,
+      "cases": [
+        {
+          "name": "shipmentAndExpiryRaceConvergesToExactlyOneLegalOutcome",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.security.ActorContextFactoryTest.xml",
+      "name": "com.materialflow.erp.security.ActorContextFactoryTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.006,
+      "cases": [
+        {
+          "name": "invalidLocalHeadersReturnStableSafeError",
+          "passed": true
+        },
+        {
+          "name": "jwtClaimsAreAuthoritativeOverSpoofableActorHeaders",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxKafkaRecoveryIntegrationTest.xml",
+      "name": "com.materialflow.relay.outbox.OutboxKafkaRecoveryIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 7.85,
+      "cases": [
+        {
+          "name": "brokerAckThenDatabaseFailureReplaysTheSameEventAtADifferentOffset",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxRelayTest.xml",
+      "name": "com.materialflow.relay.outbox.OutboxRelayTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.228,
+      "cases": [
+        {
+          "name": "interruptPreservesTheClaimAndStopsClaimingMoreWork",
+          "passed": true
+        },
+        {
+          "name": "databaseFailureAfterBrokerAckLeavesTheClaimForRecovery",
+          "passed": true
+        },
+        {
+          "name": "recordsBoundedBackoffAndDeadLetterAttemptWhenKafkaFails",
+          "passed": true
+        },
+        {
+          "name": "rejectsInvalidLeaseAndRetryConfiguration",
+          "passed": true
+        },
+        {
+          "name": "staleFailureDoesNotCountAsADeadLetterTransition",
+          "passed": true
+        },
+        {
+          "name": "staleAcknowledgmentIsCountedWithoutAttemptingAFailureWrite",
+          "passed": true
+        },
+        {
+          "name": "timeoutRecordsAnUncertainDeliveryForBoundedRetry",
+          "passed": true
+        },
+        {
+          "name": "claimsTheNextEventOnlyAfterThePreviousAcknowledgmentIsRecorded",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxRepositoryIntegrationTest.xml",
+      "name": "com.materialflow.relay.outbox.OutboxRepositoryIntegrationTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 4.517,
+      "cases": [
+        {
+          "name": "claimAndRecoverySkipRowsLockedByAnotherDatabaseTransaction",
+          "passed": true
+        },
+        {
+          "name": "failedPublishKeepsRetryScheduleAndTruncatesErrorThenDeadLetters",
+          "passed": true
+        },
+        {
+          "name": "finalLiveClaimAndFutureRetryAreNotSweptAndRecoveryIsBounded",
+          "passed": true
+        },
+        {
+          "name": "concurrentRelayInstancesClaimDisjointBatchesAndRecoverStaleClaims",
+          "passed": true
+        },
+        {
+          "name": "manualAttemptResetDoesNotReviveAnOldClaimToken",
+          "passed": true
+        },
+        {
+          "name": "expiredFinalAttemptBecomesDeadLetterInsteadOfRemainingClaimedForever",
+          "passed": true
+        },
+        {
+          "name": "oldCompletionCannotOverwriteAReclaimByTheSameInstanceName",
+          "passed": true
+        },
+        {
+          "name": "upgradesV5WithAnExistingClaimWithoutChangingItsPayload",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/integration-adapter/target/surefire-reports/TEST-com.materialflow.integration.IntegrationAdapterContextTest.xml",
+      "name": "com.materialflow.integration.IntegrationAdapterContextTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 2.997,
+      "cases": [
+        {
+          "name": "fullSpringContextAndGrpcServerStartTogether",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/integration-adapter/target/surefire-reports/TEST-com.materialflow.integration.grpc.SyntheticGrpcServicesTest.xml",
+      "name": "com.materialflow.integration.grpc.SyntheticGrpcServicesTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.131,
+      "cases": [
+        {
+          "name": "servicesAcceptBoundedSyntheticContracts",
+          "passed": true
+        },
+        {
+          "name": "malformedAndRegressiveInputsFailWithInvalidArgument",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "apps/stream-projection/target/surefire-reports/TEST-com.materialflow.projection.health.KafkaStreamsHealthIndicatorTest.xml",
+      "name": "com.materialflow.projection.health.KafkaStreamsHealthIndicatorTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.077,
+      "cases": [
+        {
+          "name": "reportsFailedStreamsAsDown",
+          "passed": true
+        },
+        {
+          "name": "reportsRunningStreamsAsUp",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/approval-workflow/target/surefire-reports/TEST-com.materialflow.approval.ApprovalInstanceStateTest.xml",
+      "name": "com.materialflow.approval.ApprovalInstanceStateTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.102,
+      "cases": [
+        {
+          "name": "enforcesMakerChecker",
+          "passed": true
+        },
+        {
+          "name": "delegatesPendingAssignmentWithoutChangingTheTemplateVersion",
+          "passed": true
+        },
+        {
+          "name": "freezesTemplateVersionAndRequiresNDistinctApprovers",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/customer-credit/target/surefire-reports/TEST-com.materialflow.credit.CreditAccountTest.xml",
+      "name": "com.materialflow.credit.CreditAccountTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.106,
+      "cases": [
+        {
+          "name": "ordinaryReservationCannotExceedLimit",
+          "passed": true
+        },
+        {
+          "name": "reserveCaptureAndSettlePreserveCreditLedgerInvariant",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/fulfillment/target/surefire-reports/TEST-com.materialflow.fulfillment.ShipmentStatusTest.xml",
+      "name": "com.materialflow.fulfillment.ShipmentStatusTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.092,
+      "cases": [
+        {
+          "name": "statusCanOnlyProgress",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/identity-org/target/surefire-reports/TEST-com.materialflow.identity.ActorContextTest.xml",
+      "name": "com.materialflow.identity.ActorContextTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.084,
+      "cases": [
+        {
+          "name": "emptyWarehouseScopeMeansOrganizationWideAccessAndInputsAreCopied",
+          "passed": true
+        },
+        {
+          "name": "enforcesRoleOrganizationAndWarehouseScopes",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/inventory/target/surefire-reports/TEST-com.materialflow.inventory.InventoryBalanceTest.xml",
+      "name": "com.materialflow.inventory.InventoryBalanceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.087,
+      "cases": [
+        {
+          "name": "partialReservationNeverMakesAvailableNegative",
+          "passed": true
+        },
+        {
+          "name": "allOrNothingReservationLeavesBalanceUntouchedOnShortage",
+          "passed": true
+        },
+        {
+          "name": "staleFencingTokenCannotShip",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/pricing-contract/target/surefire-reports/TEST-com.materialflow.pricing.PricingServiceTest.xml",
+      "name": "com.materialflow.pricing.PricingServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.09,
+      "cases": [
+        {
+          "name": "selectsContractBeforeCustomerRegionAndStandard",
+          "passed": true
+        },
+        {
+          "name": "snapshotUsesDecimalArithmeticAndDoesNotReferenceMutableRuleState",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "file": "modules/sales-order/target/surefire-reports/TEST-com.materialflow.sales.OrderStatusTest.xml",
+      "name": "com.materialflow.sales.OrderStatusTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.078,
+      "cases": [
+        {
+          "name": "permitsDocumentedHappyPathAndRejectsBackwardMovement",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

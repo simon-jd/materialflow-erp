@@ -1,0 +1,117 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-09-07T23:59:39.576544+00:00",
+  "scope": "Local synthetic Docker/Testcontainers and local process death only",
+  "checks": [
+    {
+      "name": "clean full reactor + Checkstyle + SpotBugs",
+      "command": "mvn -o -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 -Pquality clean verify",
+      "exit_code": 0,
+      "tests": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "suite_count": 21,
+      "raw_log": "raw/final-runtime-verify.log.gz"
+    },
+    {
+      "name": "Python JTL parser",
+      "command": "python3 -m unittest discover -s tests/performance -p 'test_*.py'",
+      "exit_code": 0,
+      "tests": 3
+    },
+    {
+      "name": "Python and shell syntax",
+      "command": "python3 -m py_compile tests/failure/process-kill-recovery.py tests/deployment/qualification-smoke.py; bash -n tests/performance/run-formal-baseline.sh tests/deployment/build-runtime-images.sh",
+      "exit_code": 0
+    },
+    {
+      "name": "Promtool",
+      "exit_code": 0,
+      "scenario_groups": 5,
+      "assertions": 10,
+      "raw_log": "raw/promtool.log.gz"
+    },
+    {
+      "name": "Helm lint/template and Compose configs",
+      "exit_code": 0,
+      "scope": "Local validation/render only, no new kind or hosted CI execution",
+      "raw_log": "raw/helm-lint.log.gz"
+    },
+    {
+      "name": "five exact-JAR images and runtime smoke",
+      "status": "passed",
+      "evidence": [
+        "boot4-container-manifest.json",
+        "deployment-smoke.json",
+        "jwt-rbac.json"
+      ]
+    },
+    {
+      "name": "dated current image scan",
+      "status": "passed",
+      "application_images": 5,
+      "HIGH_CRITICAL_findings": 0,
+      "evidence": "image-scan-summary.json"
+    },
+    {
+      "name": "three measured phases per runtime variant",
+      "status": "passed",
+      "measured_requests_each": 5409,
+      "errors_each": 0,
+      "timeouts_each": 0,
+      "evidence": [
+        "performance-summary.json",
+        "performance-drain.json"
+      ]
+    },
+    {
+      "name": "actual JVM SIGKILL",
+      "status": "passed",
+      "cases": 2,
+      "exit_codes": [
+        137,
+        137
+      ],
+      "evidence": "process-kill.json"
+    },
+    {
+      "name": "post-drill recovery/fixture cleanup",
+      "status": "passed",
+      "evidence": "post-drill-state.json"
+    }
+  ],
+  "initial_failures": "qualification-findings.json records actual defects before fixes; final passing results do not erase them. Original first projection error log was not retained before recreation.",
+  "surefire_uncompressed_sha256": {
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.ArchitectureRulesTest.xml": "62ff7f7a622da163f2acb19e81ac81fc746d3b3bccf93ae524df801bbe7d845b",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.events.DomainEventConsumerRecoveryIntegrationTest.xml": "3a9ffdc6a62cf428fba1a070ef29f63c24f2731eaaef54ede09b475ff5466224",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.events.DomainEventFailurePolicyTest.xml": "82532099a34c63f14019929058751186d3eca78685c293e39ee5976ad9e50e1f",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.BusinessFlowIntegrationTest.xml": "653f1621b28c9fe2f04f8659f629543393509657b93bc977a731607845db9b72",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.CreditAndApprovalConcurrencyIntegrationTest.xml": "4d88f9bca7e9f4ccd7d9f537111edf8945fb88bdbfff2a2ff47640834c0c8d37",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.OrderConcurrencyIntegrationTest.xml": "c022d9aeaf31376f3a1d20fedfded531172bd546d6a114e5ce5e6f4684c535bb",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.integration.ReservationExpiryShipmentRaceIntegrationTest.xml": "ccd04981b6c1a1bbeec925149594a620aed627932778ffe9bebbf56d286778c1",
+    "apps/erp-core/target/surefire-reports/TEST-com.materialflow.erp.security.ActorContextFactoryTest.xml": "c1c9bd641b49bc2f9e95b5b5d2a1fbcb3f416a33032f9d6ca35fc0ca1b0d78da",
+    "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxKafkaRecoveryIntegrationTest.xml": "d24193ae2e65d87580362c43e54914bbfe5ffc0e07d5ce6e91b3dc64a455914c",
+    "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxRelayTest.xml": "c0077b6ba5e4f5f222a26d75292f023d3d66851e3ad534a95cd7d268be946e7b",
+    "apps/event-relay/target/surefire-reports/TEST-com.materialflow.relay.outbox.OutboxRepositoryIntegrationTest.xml": "7367155108cd5510828805cbc35347aeb579edfdffb501a31c28befe39073a25",
+    "apps/integration-adapter/target/surefire-reports/TEST-com.materialflow.integration.IntegrationAdapterContextTest.xml": "660325df9b149e7351a6cbe64a7c49e3971533cce3c6283117dbd90a92e66063",
+    "apps/integration-adapter/target/surefire-reports/TEST-com.materialflow.integration.grpc.SyntheticGrpcServicesTest.xml": "f9c0da8ce3f8ed21f57c401e1255118cb73e50c347293da242f753a718a7332e",
+    "apps/stream-projection/target/surefire-reports/TEST-com.materialflow.projection.health.KafkaStreamsHealthIndicatorTest.xml": "f408c517b6f6c776bd6e7fd56d0184849295262159df458b1f50dbe7fb77e4d2",
+    "modules/approval-workflow/target/surefire-reports/TEST-com.materialflow.approval.ApprovalInstanceStateTest.xml": "44da976d47546da178bfc71f6210fe88d1f89fd1b8509aeaad1010c8b1f62030",
+    "modules/customer-credit/target/surefire-reports/TEST-com.materialflow.credit.CreditAccountTest.xml": "6afb6861aec1cd2f4b1272533bf0b308985d16dcb702a92c39fcc8768a0415e7",
+    "modules/fulfillment/target/surefire-reports/TEST-com.materialflow.fulfillment.ShipmentStatusTest.xml": "b38e42dcbb16ed406576ec77cac2d9e658cef6a61b3792b066cca13d688f8c38",
+    "modules/identity-org/target/surefire-reports/TEST-com.materialflow.identity.ActorContextTest.xml": "571bbf3023b4f21a3f5e10ed709a39b639cb53013570861314d91d87a9e0a19e",
+    "modules/inventory/target/surefire-reports/TEST-com.materialflow.inventory.InventoryBalanceTest.xml": "efa2254121ff4625578c81b605b648800b952e201edaecf0f3d6245f04e086fb",
+    "modules/pricing-contract/target/surefire-reports/TEST-com.materialflow.pricing.PricingServiceTest.xml": "a43cddcc8f5904191347e276a92b327fcb437a8b0b46ac562e896a7a52d00001",
+    "modules/sales-order/target/surefire-reports/TEST-com.materialflow.sales.OrderStatusTest.xml": "4b65da14f7b872d55f8f569a2754105f3b5200c439ad1242019d0a90f2d4ed41"
+  },
+  "limitations": [
+    "No production, cloud, real supplier, ML/GPU or multi-node qualification.",
+    "Specific legacy persisted request compatibility only.",
+    "Inbox-commit/offset-commit and DLQ-ACK/offset-commit process kills remain unverified.",
+    "Single shared host and capped workload: no measured capacity or causal speedup.",
+    "Full API/security audit, lower-severity and supporting-service image scans are not included.",
+    "Earlier September 1 kind/deployment and long-duration benchmark outcomes remain historical.",
+    "Changes remain uncommitted and local; no hosted CI run or publication."
+  ]
+}

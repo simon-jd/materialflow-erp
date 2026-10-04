@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: materialflow-event-relay
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/materialflow}
+    username: ${POSTGRES_USER:materialflow}
+    password: ${POSTGRES_PASSWORD:materialflow}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:6}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    template:
+      observation-enabled: true
+    producer:
+      acks: all
+      retries: 10
+      properties:
+        enable.idempotence: true
+        # One record is claimed and awaited at a time; Kafka 4's default 5ms cannot batch it.
+        linger.ms: 0
+        delivery.timeout.ms: 30000
+        max.in.flight.requests.per.connection: 5
+management:
+  # Metrics are scraped by Prometheus; logs stay on stdout. Export only traces over OTLP.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+materialflow:
+  relay:
+    instance-id: ${HOSTNAME:local-relay}
+    batch-size: 50 # Max sends per poll; each record is claimed immediately before its send.
+    max-attempts: 8
+    claim-timeout: 30s
+    publish-timeout: 10s
+    initial-backoff: 1s
+    max-backoff: 5m
+    poll-delay: 500ms
+server:
+  port: ${SERVER_PORT:8084}
+logging:
+  structured:
+    format:
+      console: logstash

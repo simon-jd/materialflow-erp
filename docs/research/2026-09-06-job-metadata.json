@@ -1,0 +1,56 @@
+[
+  {
+    "id": "9fde8d03-9f47-44ac-bd14-53829722c06d",
+    "title": "Software Engineer | Early Careers, 2027 Start",
+    "location": "New York City",
+    "publishedAt": "2026-09-02T15:00:36.023+00:00",
+    "jobUrl": "https://jobs.ashbyhq.com/arch.co/9fde8d03-9f47-44ac-bd14-53829722c06d",
+    "retrieved_at": "2026-09-06",
+    "date_semantics": "Official ATS publishedAt; not proof of original first publication",
+    "current_board_contains_id": true,
+    "feed_sha256": "aeedf532f13897dce18ec7a1364ebb6a2d74723d68ad724691dbfeca9cf7d81b"
+  },
+  {
+    "id": "256c2ec2-01c8-4ff6-9ad0-b926fe40472d",
+    "title": "Software Engineer - 2027 New Grads",
+    "location": "New York, New York",
+    "publishedAt": "2026-03-26T19:41:41.029+00:00",
+    "jobUrl": "https://jobs.ashbyhq.com/ellipsislabs/256c2ec2-01c8-4ff6-9ad0-b926fe40472d",
+    "retrieved_at": "2026-09-06",
+    "date_semantics": "Official ATS publishedAt; not proof of original first publication",
+    "current_board_contains_id": true,
+    "feed_sha256": "7335d9d2f5abe08e00e7e81745f9a9dd47ad8ed8921968c0f8bff21ddebf720e"
+  },
+  {
+    "id": "282736cd-6967-469b-b13d-63b54424ed1c",
+    "board": "astronomer",
+    "retrieved_at": "2026-09-06",
+    "current_board_contains_id": false,
+    "publishedAt": null,
+    "feed_sha256": "bd647c1bce4cb2ab9509025ab52f36529e2a6301fa2a1443e2b1e763f3579860"
+  },
+  {
+    "id": "de75aa5e-82f9-4348-9122-4cc83138a569",
+    "board": "astronomer",
+    "retrieved_at": "2026-09-06",
+    "current_board_contains_id": false,
+    "publishedAt": null,
+    "feed_sha256": "bd647c1bce4cb2ab9509025ab52f36529e2a6301fa2a1443e2b1e763f3579860"
+  },
+  {
+    "id": "88579760-2f82-406f-8cc6-150c9164e659",
+    "board": "confluent",
+    "retrieved_at": "2026-09-06",
+    "current_board_contains_id": false,
+    "publishedAt": null,
+    "feed_sha256": "5c1006ccefb1f8423c05020d19019a8a0c816850af1a0eabc7daa36fb320db77"
+  },
+  {
+    "id": "7d6ae2be-cd53-466c-8151-2dae2e87aace",
+    "board": "abridge",
+    "retrieved_at": "2026-09-06",
+    "current_board_contains_id": false,
+    "publishedAt": null,
+    "feed_sha256": "4d92f6da1bf98aa3615ef3be758eb9b38f48bb30ce27df0ae7c9c0d78d20e716"
+  }
+]

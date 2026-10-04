@@ -1,0 +1,11 @@
+{{- range $name, $component := .Values.components }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: materialflow-{{ $name }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: materialflow-{{ $name }}}
+{{- end }}

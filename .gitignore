@@ -1,0 +1,15 @@
+target/
+**/target/
+.git/
+.git-local/
+.idea/
+.vscode/
+*.iml
+*.log
+.env
+.env.*
+!.env.example
+docs/evidence/**/raw/
+deploy/compose/data/
+__pycache__/
+*.pyc

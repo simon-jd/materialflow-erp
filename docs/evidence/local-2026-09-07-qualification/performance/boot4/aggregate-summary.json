@@ -1,0 +1,62 @@
+{
+  "runs": [
+    {
+      "run": 1,
+      "samples": 1803,
+      "successes": 1803,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 179953,
+      "first_sample_ms": 1788824688014,
+      "last_completion_ms": 1788824867967,
+      "p50_ms": 12,
+      "p95_ms": 22,
+      "p99_ms": 35,
+      "throughput_rps": 10.019282812734437,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0
+    },
+    {
+      "run": 2,
+      "samples": 1803,
+      "successes": 1803,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 179961,
+      "first_sample_ms": 1788824933392,
+      "last_completion_ms": 1788825113353,
+      "p50_ms": 10,
+      "p95_ms": 18,
+      "p99_ms": 25,
+      "throughput_rps": 10.0188374147732,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0
+    },
+    {
+      "run": 3,
+      "samples": 1803,
+      "successes": 1803,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 179958,
+      "first_sample_ms": 1788825178850,
+      "last_completion_ms": 1788825358808,
+      "p50_ms": 10,
+      "p95_ms": 22,
+      "p99_ms": 37,
+      "throughput_rps": 10.01900443436802,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0
+    }
+  ],
+  "aggregate": {
+    "samples": 5409,
+    "errors": 0,
+    "p50_ms": 10,
+    "p95_ms": 22,
+    "p99_ms": 35,
+    "throughput_rps": 10.019041550589769,
+    "error_rate_percent": 0.0,
+    "timeout_rate_percent": 0.0
+  }
+}

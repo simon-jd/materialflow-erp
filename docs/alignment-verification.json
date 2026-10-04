@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-04T04:18:23.065528+00:00",
+  "provenance": "Owner-confirmed cloud results remain separate from these local checks.",
+  "notes": [
+    "Full Maven quality verify: 56 JUnit cases / 21 suites / zero failed or skipped; Checkstyle and SpotBugs pass. Relay tests rerun after batch adjustment.",
+    "Publishes the transactional ERP with fenced relay and inbox recovery into the empty private repository; batch now 50 per 500 ms, lease 30 s. Five-app/performance/20-kill cloud campaigns not rerun."
+  ],
+  "checks": [
+    {
+      "command": "mvn -B -ntp -Dmaven.repo.local=/tmp/materialflow-alignment-m2 -DskipTests package",
+      "exit_code": 0,
+      "elapsed_seconds": 56.23,
+      "log_sha256": "e2ec9f7711419a05eee4a3d29f963e76520b99ae554fdfa31cfcd235a2f0ac1a"
+    },
+    {
+      "command": "mvn -B -ntp -Dmaven.repo.local=/tmp/materialflow-alignment-m2 -Pquality verify",
+      "exit_code": 0,
+      "elapsed_seconds": 172.74,
+      "log_sha256": "90d9eaf6b9dce30c675c2a285722d28303d049649d83610436c48a336e99dcc1"
+    },
+    {
+      "command": "mvn -B -pl apps/event-relay -am test -Dtest=OutboxRelayTest -Dsurefire.failIfNoSpecifiedTests=false",
+      "exit_code": 0,
+      "log_sha256": "98b212066cbd2722c13c64b51a6734916fc0f6aa1630c0f2350c610ac0bafcd6"
+    }
+  ]
+}

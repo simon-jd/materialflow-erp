@@ -1,0 +1,38 @@
+groups:
+  - name: materialflow-invariants
+    rules:
+      - alert: OutboxBacklogTooOld
+        expr: outbox_oldest_event_age_seconds > 300
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Oldest unpublished outbox event exceeds five minutes"}
+      - alert: OutboxDeadLetterDetected
+        expr: max(outbox_dead_letter_count) > 0
+        labels: {severity: critical}
+        annotations: {summary: "Outbox dead letters require review; delivery may have occurred"}
+      - alert: OutboxClaimOwnershipLost
+        expr: sum(increase(outbox_claim_lost_total[5m])) > 0
+        labels: {severity: warning}
+        annotations: {summary: "Relay rejected a stale completion; inspect lease timing and instance overlap"}
+      - alert: InventoryInvariantViolation
+        expr: increase(inventory_negative_stock_violation_total[5m]) > 0
+        labels: {severity: critical}
+        annotations: {summary: "Inventory non-negativity invariant was violated"}
+      - alert: DomainConsumerDatabaseRetrying
+        expr: sum(increase(event_consumer_failure_total{reason="database"}[5m])) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Consumer database retries persist; inspect database health, lag and retention headroom"}
+      - alert: DomainConsumerRecoveryFailed
+        expr: sum(increase(event_consumer_recovery_failed_total[5m])) > 0
+        labels: {severity: critical}
+        annotations: {summary: "Consumer DLQ publication failed; source offsets remain blocked"}
+      - alert: DomainConsumerRecordQuarantined
+        expr: sum(increase(event_consumer_recovered_total[5m])) > 0
+        labels: {severity: warning}
+        annotations: {summary: "Consumer records reached DLQ; inspect and deliberately replay after repair"}
+      - alert: HighHttpErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 1) > 0.01
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "HTTP 5xx rate exceeds one percent"}

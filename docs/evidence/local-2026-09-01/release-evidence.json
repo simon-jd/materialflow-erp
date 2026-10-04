@@ -1,0 +1,113 @@
+{
+  "release": "local-2026-09-01",
+  "measured_at": "2026-09-01T23:50:32-07:00",
+  "timezone": "America/Los_Angeles",
+  "provenance": "local_only",
+  "source_git_sha": "431774cb7d75d7d09e37eaea8576dbcd4912bdea",
+  "git_sha_state": "measured_honest_local_baseline",
+  "git_metadata_dir": ".git-local",
+  "release_state": "implemented_local_reference",
+  "completed_portfolio_scope": false,
+  "published": false,
+  "cloud_deployed": false,
+  "experience_bank_created": false,
+  "tests": {
+    "state": "measured",
+    "suites": 18,
+    "passed": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "maven_verify_log_sha256": "da5213c577368d3d1520f86d7ca433983128d636218f5dfd536ab87cab1248d9",
+    "coverage": {
+      "state": "measured_reported_modules_only",
+      "reports": 11,
+      "line_covered": 1386,
+      "line_missed": 424,
+      "line_percent": 76.57
+    }
+  },
+  "runtime": {
+    "application_health_up": 5,
+    "prometheus_targets_up": 6,
+    "orders": 55411,
+    "outbox_total": 56786,
+    "outbox_pending": 0,
+    "consumer_inbox": 56786,
+    "audit_records": 56786,
+    "invalid_inventory_rows": 0,
+    "over_credit_accounts": 0,
+    "duplicate_invoice_orders": 0,
+    "postgres_lock_waiters_final": 0,
+    "postgres_deadlocks": 0,
+    "core_consumer_lag": 0,
+    "projection_consumer_lag": 0
+  },
+  "formal_performance_protocol": {
+    "state": "measured_pass_local_baseline",
+    "security_mode": "jwt_enabled",
+    "independent_runs": 3,
+    "warmup_seconds_per_run": 600,
+    "measurement_seconds_per_run": 1200,
+    "threads": 4,
+    "target_requests_per_minute": 600,
+    "measurement_samples": 36009,
+    "errors": 0,
+    "timeouts": 0,
+    "error_percent": 0.0,
+    "throughput_requests_per_second": 10.003,
+    "median_p50_ms": 19,
+    "median_p95_ms": 36,
+    "median_p99_ms": 44,
+    "aggregate_json_sha256": "a7d3a7ee2bd9bde0ca7a5af2c1c9b489c4c8084237200f104707344c47f7e2a1"
+  },
+  "security": {
+    "state": "measured_exact_final_images_and_workspace",
+    "jwt_rbac_tenant_isolation": "measured_pass",
+    "images_scanned": 5,
+    "high_vulnerabilities": 0,
+    "critical_vulnerabilities": 0,
+    "detected_image_secrets": 0,
+    "workspace_high_misconfigurations": 0,
+    "workspace_critical_misconfigurations": 0,
+    "workspace_detected_secrets": 0,
+    "sboms": 5
+  },
+  "images": {
+    "erp_core": "sha256:eb23b490fcbe707cfe12758afc786189890639266d9b7864d1dfd21ad29f7c6d",
+    "event_relay": "sha256:b5010f9227ba2ede9334785ab14b3596b676dda597e48987deb0098de54f50ec",
+    "edge_gateway": "sha256:03407030af0e197869b6721f62ea4336fb2583db0e5bdb6a2602354201cf96da",
+    "stream_projection": "sha256:b094dc4fe3df1f198d16ddef0a12d8ca8d9a92992fa94b7caaba90fbc54bff9b",
+    "integration_adapter": "sha256:467c595f22bf328a8bc16dcc6f4b1bc9a18769026bd940d4b548fde49a79d9aa"
+  },
+  "kubernetes": {
+    "kind_version": "0.32.0",
+    "server_version": "1.36.1",
+    "helm_release_revision": 2,
+    "all_application_deployments_ready": true,
+    "dependency_security_contexts_verified": true
+  },
+  "failure_drills": {
+    "kafka_outage_recovery": "measured_pass",
+    "redis_fail_closed_recovery": "measured_pass",
+    "postgres_lock_timeout_idempotent_retry": "measured_pass",
+    "otel_collector_outage": "measured_pass",
+    "kubernetes_pod_restart": "measured_pass",
+    "kubernetes_rolling_update": "measured_pass_10_of_10_writes"
+  },
+  "trace": {
+    "state": "measured_full_path",
+    "trace_id": "beffaaa5e624c43a9bb3f07385e98e4e",
+    "span_count": 16,
+    "services": 3,
+    "api_database_outbox_kafka_consumer_single_trace": "measured_pass",
+    "raw_sha256": "4a70e235aae436cf4ed5ef6b718657656afb8f331b4968572d7a705ee8c256e5"
+  },
+  "limitations": [
+    "All measurements are local and synthetic; they are not production SLA or employment evidence.",
+    "The formal baseline tests 10 requests/second on one host and is not a saturation or cloud-capacity result.",
+    "The desktop environment mounts an empty .git directory read-only, so real local Git objects use .git-local.",
+    "Relay crash windows, consumer crash-before-offset-commit, connection-pool exhaustion, event reordering, and Flyway failure drills remain unexecuted locally.",
+    "Experience Bank content requires separate explicit authorization and was not created."
+  ]
+}

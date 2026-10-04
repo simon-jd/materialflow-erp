@@ -1,0 +1,17 @@
+{{- range $name, $component := .Values.components }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: materialflow-{{ $name }}
+  labels:
+    {{- include "materialflow.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: materialflow-{{ $name }}
+spec:
+  selector: {app.kubernetes.io/name: materialflow-{{ $name }}}
+  ports:
+    - {name: http, port: {{ $component.port }}, targetPort: http}
+    {{- if $component.grpcPort }}
+    - {name: grpc, port: {{ $component.grpcPort }}, targetPort: grpc}
+    {{- end }}
+{{- end }}

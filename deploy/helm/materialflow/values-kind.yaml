@@ -1,0 +1,54 @@
+global:
+  imageRegistry: materialflow
+  imageTag: kind
+  imagePullPolicy: Never
+  existingSecret: materialflow-runtime
+  otelEndpoint: http://jaeger:4318/v1/traces
+
+config:
+  postgresUrl: jdbc:postgresql://postgres:5432/materialflow
+  redisHost: redis
+  kafkaBootstrapServers: kafka:9092
+  erpCoreUri: http://materialflow-erp-core:8080
+  projectionUri: http://materialflow-stream-projection:8082
+  oidcIssuerUri: http://keycloak:8080/realms/materialflow
+  oidcJwkSetUri: http://keycloak:8080/realms/materialflow/protocol/openid-connect/certs
+  securityEnabled: "false"
+
+components:
+  erp-core:
+    port: 8080
+    replicas: 2
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 100m, memory: 256Mi}
+      limits: {cpu: "1", memory: 768Mi}
+  event-relay:
+    port: 8084
+    replicas: 1
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 50m, memory: 128Mi}
+      limits: {cpu: 500m, memory: 384Mi}
+  edge-gateway:
+    port: 8081
+    replicas: 2
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 50m, memory: 192Mi}
+      limits: {cpu: 500m, memory: 512Mi}
+  stream-projection:
+    port: 8082
+    replicas: 1
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 100m, memory: 256Mi}
+      limits: {cpu: "1", memory: 768Mi}
+  integration-adapter:
+    port: 8083
+    grpcPort: 9090
+    replicas: 1
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 50m, memory: 128Mi}
+      limits: {cpu: 500m, memory: 384Mi}

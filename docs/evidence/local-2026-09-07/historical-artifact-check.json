@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-09-07T22:42:36.691007+00:00",
+  "scope": "Hash existence/integrity only; no new performance run or recomputation of historical metrics",
+  "files": [
+    {
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-1-measurement.jtl.gz",
+      "exists": true,
+      "matches_previous_sha256": true
+    },
+    {
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-2-measurement.jtl.gz",
+      "exists": true,
+      "matches_previous_sha256": true
+    },
+    {
+      "path": "docs/evidence/local-2026-09-01/raw/performance/formal-2026-09-02/run-3-measurement.jtl.gz",
+      "exists": true,
+      "matches_previous_sha256": true
+    }
+  ]
+}

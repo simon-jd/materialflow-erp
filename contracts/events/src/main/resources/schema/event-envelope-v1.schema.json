@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://materialflow.local/schema/event-envelope-v1.schema.json",
+  "title": "MaterialFlow Domain Event Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId", "eventType", "aggregateId", "aggregateVersion", "organizationId",
+    "occurredAt", "schemaVersion", "traceId", "correlationId", "payload"
+  ],
+  "properties": {
+    "eventId": {"type": "string", "format": "uuid"},
+    "eventType": {"type": "string", "minLength": 1, "maxLength": 120},
+    "aggregateId": {"type": "string", "format": "uuid"},
+    "aggregateVersion": {"type": "integer", "minimum": 1},
+    "organizationId": {"type": "string", "format": "uuid"},
+    "occurredAt": {"type": "string", "format": "date-time"},
+    "schemaVersion": {"const": 1},
+    "traceId": {"type": "string", "minLength": 1, "maxLength": 64},
+    "causationId": {"type": ["string", "null"], "format": "uuid"},
+    "correlationId": {"type": "string", "format": "uuid"},
+    "payload": {"type": "object"}
+  }
+}

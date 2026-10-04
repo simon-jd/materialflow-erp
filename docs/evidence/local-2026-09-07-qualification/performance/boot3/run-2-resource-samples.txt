@@ -1,0 +1,48 @@
+timestamp=2026-09-07T23:11:09Z
+materialflow-qualification-edge-gateway-1 cpu=2.94% memory=250.8MiB / 1GiB net=12.8MB / 24.5MB
+materialflow-qualification-erp-core-1 cpu=4.48% memory=361.3MiB / 1GiB net=23.9MB / 42.3MB
+materialflow-qualification-event-relay-1 cpu=3.12% memory=196MiB / 1GiB net=5.58MB / 12.1MB
+materialflow-qualification-postgres-1 cpu=3.33% memory=72.2MiB / 123.2GiB net=25.5MB / 16.8MB
+materialflow-qualification-kafka-1 cpu=3.02% memory=430MiB / 123.2GiB net=4.81MB / 4.18MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":0.0}
+timestamp=2026-09-07T23:11:41Z
+materialflow-qualification-edge-gateway-1 cpu=3.05% memory=251.1MiB / 1GiB net=14.1MB / 26.9MB
+materialflow-qualification-erp-core-1 cpu=2.56% memory=362.2MiB / 1GiB net=26.4MB / 46.8MB
+materialflow-qualification-event-relay-1 cpu=0.33% memory=196.3MiB / 1GiB net=6.12MB / 13.1MB
+materialflow-qualification-postgres-1 cpu=2.23% memory=74.24MiB / 123.2GiB net=28.2MB / 18.5MB
+materialflow-qualification-kafka-1 cpu=1.28% memory=428.3MiB / 123.2GiB net=5.32MB / 4.63MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":0.0}
+timestamp=2026-09-07T23:12:14Z
+materialflow-qualification-edge-gateway-1 cpu=2.06% memory=251MiB / 1GiB net=15.5MB / 29.6MB
+materialflow-qualification-erp-core-1 cpu=3.99% memory=361.8MiB / 1GiB net=29MB / 51.2MB
+materialflow-qualification-event-relay-1 cpu=7.11% memory=196.4MiB / 1GiB net=6.66MB / 14.3MB
+materialflow-qualification-postgres-1 cpu=5.23% memory=75.24MiB / 123.2GiB net=30.8MB / 20.2MB
+materialflow-qualification-kafka-1 cpu=2.56% memory=441.2MiB / 123.2GiB net=5.8MB / 5.05MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":1.0}
+timestamp=2026-09-07T23:12:46Z
+materialflow-qualification-edge-gateway-1 cpu=2.52% memory=251.7MiB / 1GiB net=16.9MB / 32.1MB
+materialflow-qualification-erp-core-1 cpu=5.11% memory=363.7MiB / 1GiB net=31.5MB / 55.8MB
+materialflow-qualification-event-relay-1 cpu=1.04% memory=197.2MiB / 1GiB net=7.18MB / 15.4MB
+materialflow-qualification-postgres-1 cpu=3.99% memory=78.5MiB / 123.2GiB net=33.4MB / 21.9MB
+materialflow-qualification-kafka-1 cpu=1.94% memory=465.3MiB / 123.2GiB net=6.31MB / 5.49MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":0.0}
+timestamp=2026-09-07T23:13:18Z
+materialflow-qualification-edge-gateway-1 cpu=2.86% memory=253.2MiB / 1GiB net=18.2MB / 34.7MB
+materialflow-qualification-erp-core-1 cpu=4.68% memory=364.9MiB / 1GiB net=34MB / 60.1MB
+materialflow-qualification-event-relay-1 cpu=0.75% memory=197.2MiB / 1GiB net=7.73MB / 16.4MB
+materialflow-qualification-postgres-1 cpu=4.84% memory=79.55MiB / 123.2GiB net=36MB / 23.7MB
+materialflow-qualification-kafka-1 cpu=1.80% memory=479.7MiB / 123.2GiB net=6.78MB / 5.9MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":0.0}
+timestamp=2026-09-07T23:13:50Z
+materialflow-qualification-edge-gateway-1 cpu=2.33% memory=253.8MiB / 1GiB net=19.6MB / 37.2MB
+materialflow-qualification-erp-core-1 cpu=4.64% memory=365.5MiB / 1GiB net=36.5MB / 64.7MB
+materialflow-qualification-event-relay-1 cpu=0.63% memory=197.2MiB / 1GiB net=8.26MB / 17.6MB
+materialflow-qualification-postgres-1 cpu=3.17% memory=79.34MiB / 123.2GiB net=38.6MB / 25.4MB
+materialflow-qualification-kafka-1 cpu=1.68% memory=501.4MiB / 123.2GiB net=7.29MB / 6.35MB
+lock_waiters=0
+{"metric":"hikaricp.connections.active","value":0.0}

@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-09-06T23:24:44.072125+00:00",
+  "mode": "local_real_postgresql_and_kafka_with_injected_failures",
+  "os": "Linux-7.0.0-29-generic-x86_64-with-glibc2.43",
+  "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+  "logical_cpus": 32,
+  "memory_kib": 129209084,
+  "java": "Temurin 21.0.12+8 LTS",
+  "maven": "3.9.16",
+  "docker": "29.8.0",
+  "dependencies": {
+    "spring_boot": "3.5.16 (OSS ended)",
+    "spring_cloud": "2025.0.3",
+    "spring_kafka": "3.3.16",
+    "kafka_clients": "3.9.2",
+    "flyway": "11.7.2",
+    "testcontainers": "1.21.4",
+    "postgresql_jdbc": "42.7.12"
+  },
+  "container_images": {
+    "postgres:17.6-alpine": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "apache/kafka:4.1.0": "sha256:bff074a5d0051dbc0bbbcd25b045bb1fe84833ec0d3c7c965d1797dd289ec88f",
+    "prom/prometheus:v3.6.0": "sha256:76947e7ef22f8a698fc638f706685909be425dbe09bd7a2cd7aca849f79b5f64"
+  },
+  "topology": "JUnit JVMs on one Linux host; ephemeral Testcontainers PostgreSQL and Kafka; no external integration service or cloud; unit-test Kafka failures mocked; integration post-ACK database failure and lease timestamps injected",
+  "dataset": "Synthetic seeded ERP data; 12 Outbox rows in two-relay contention; one Kafka event published twice; one inventory receipt consumed by 12 contenders and replayed after commit."
+}

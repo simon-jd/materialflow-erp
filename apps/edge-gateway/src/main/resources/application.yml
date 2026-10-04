@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+spring:
+  application:
+    name: materialflow-edge-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${MATERIALFLOW_REDIS_PORT:6379}
+      timeout: 500ms
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/materialflow}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/materialflow/protocol/openid-connect/certs}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@actorOrAddressKeyResolver}"
+                deny-empty-key: true
+          routes:
+            - id: erp-core
+              uri: ${ERP_CORE_URI:http://localhost:8080}
+              predicates:
+                - Path=/api/v1/orders/**,/api/v1/approvals/**,/api/v1/shipments/**,/api/v1/invoices/**,/api/v1/payment-files/**,/api/v1/procurement/**
+            - id: projection
+              uri: ${PROJECTION_URI:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/projections/**
+management:
+  # Metrics are scraped by Prometheus; logs stay on stdout. Export only traces over OTLP.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+materialflow:
+  security:
+    enabled: ${MATERIALFLOW_SECURITY_ENABLED:false}
+logging:
+  structured:
+    format:
+      console: logstash

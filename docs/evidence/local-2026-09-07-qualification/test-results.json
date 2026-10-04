@@ -1,0 +1,313 @@
+{
+  "recorded_at": "2026-09-07T23:40:38.364880+00:00",
+  "command": "mvn -o -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 -Pquality clean verify",
+  "totals": {
+    "tests": 56,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suite_count": 21,
+  "suites": [
+    {
+      "suite": "com.materialflow.erp.ArchitectureRulesTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 1.803,
+      "report_sha256": "62ff7f7a622da163f2acb19e81ac81fc746d3b3bccf93ae524df801bbe7d845b",
+      "test_names": [
+        "DOMAIN_IS_FRAMEWORK_INDEPENDENT",
+        "CONTROLLERS_DO_NOT_ACCESS_PERSISTENCE",
+        "TRANSACTIONS_LIVE_ON_APPLICATION_SERVICES"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.events.DomainEventConsumerRecoveryIntegrationTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 44.532,
+      "report_sha256": "3a9ffdc6a62cf428fba1a070ef29f63c24f2731eaaef54ede09b475ff5466224",
+      "test_names": [
+        "poisonIsQuarantinedOnceAndTheFollowingValidRecordCommits",
+        "invalidInventoryIdentityRollsBackInboxBeforeQuarantine",
+        "databaseLockOutlivesOldRetryBudgetWithoutDeadLetterOrOffsetAdvance",
+        "unavailableDlqRetainsOffsetAcrossConsumerRestartThenRecovers",
+        "newConsumerGroupReplaysEventsPublishedBeforeItStarts"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.events.DomainEventFailurePolicyTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.257,
+      "report_sha256": "82532099a34c63f14019929058751186d3eca78685c293e39ee5976ad9e50e1f",
+      "test_names": [
+        "connectionAndTransactionAcquisitionFailuresAreRecoverableButBadSqlIsNot",
+        "malformedAndMissingIdentityAreTypedBeforeAnyDatabaseWrite",
+        "databaseBackoffSurvivesTheOldBudgetAndCapsItsInterval",
+        "postgresLockSqlStateIsRecognizedEvenWhenSpringLeavesItUncategorized"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.integration.BusinessFlowIntegrationTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 2.713,
+      "report_sha256": "653f1621b28c9fe2f04f8659f629543393509657b93bc977a731607845db9b72",
+      "test_names": [
+        "orderToCashAndProcurementToReceiptAreIdempotentEndToEnd",
+        "replaysPersistedBoot3OrderWithoutReapplyingBusinessEffects"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.integration.CreditAndApprovalConcurrencyIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 2.886,
+      "report_sha256": "4d88f9bca7e9f4ccd7d9f537111edf8945fb88bdbfff2a2ff47640834c0c8d37",
+      "test_names": [
+        "concurrentApprovalAndCreditReservationAllowOnlyLegalWinners"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.integration.OrderConcurrencyIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 3.286,
+      "report_sha256": "c022d9aeaf31376f3a1d20fedfded531172bd546d6a114e5ce5e6f4684c535bb",
+      "test_names": [
+        "migrationsIdempotencyAndConcurrentHotSkuReservationsPreserveInvariants"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.integration.ReservationExpiryShipmentRaceIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 2.49,
+      "report_sha256": "ccd04981b6c1a1bbeec925149594a620aed627932778ffe9bebbf56d286778c1",
+      "test_names": [
+        "shipmentAndExpiryRaceConvergesToExactlyOneLegalOutcome"
+      ]
+    },
+    {
+      "suite": "com.materialflow.erp.security.ActorContextFactoryTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.008,
+      "report_sha256": "c1c9bd641b49bc2f9e95b5b5d2a1fbcb3f416a33032f9d6ca35fc0ca1b0d78da",
+      "test_names": [
+        "invalidLocalHeadersReturnStableSafeError",
+        "jwtClaimsAreAuthoritativeOverSpoofableActorHeaders"
+      ]
+    },
+    {
+      "suite": "com.materialflow.relay.outbox.OutboxKafkaRecoveryIntegrationTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 9.813,
+      "report_sha256": "d24193ae2e65d87580362c43e54914bbfe5ffc0e07d5ce6e91b3dc64a455914c",
+      "test_names": [
+        "brokerAckThenDatabaseFailureReplaysTheSameEventAtADifferentOffset"
+      ]
+    },
+    {
+      "suite": "com.materialflow.relay.outbox.OutboxRelayTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.312,
+      "report_sha256": "c0077b6ba5e4f5f222a26d75292f023d3d66851e3ad534a95cd7d268be946e7b",
+      "test_names": [
+        "interruptPreservesTheClaimAndStopsClaimingMoreWork",
+        "databaseFailureAfterBrokerAckLeavesTheClaimForRecovery",
+        "recordsBoundedBackoffAndDeadLetterAttemptWhenKafkaFails",
+        "rejectsInvalidLeaseAndRetryConfiguration",
+        "staleFailureDoesNotCountAsADeadLetterTransition",
+        "staleAcknowledgmentIsCountedWithoutAttemptingAFailureWrite",
+        "timeoutRecordsAnUncertainDeliveryForBoundedRetry",
+        "claimsTheNextEventOnlyAfterThePreviousAcknowledgmentIsRecorded"
+      ]
+    },
+    {
+      "suite": "com.materialflow.relay.outbox.OutboxRepositoryIntegrationTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 4.511,
+      "report_sha256": "7367155108cd5510828805cbc35347aeb579edfdffb501a31c28befe39073a25",
+      "test_names": [
+        "claimAndRecoverySkipRowsLockedByAnotherDatabaseTransaction",
+        "failedPublishKeepsRetryScheduleAndTruncatesErrorThenDeadLetters",
+        "finalLiveClaimAndFutureRetryAreNotSweptAndRecoveryIsBounded",
+        "concurrentRelayInstancesClaimDisjointBatchesAndRecoverStaleClaims",
+        "manualAttemptResetDoesNotReviveAnOldClaimToken",
+        "expiredFinalAttemptBecomesDeadLetterInsteadOfRemainingClaimedForever",
+        "oldCompletionCannotOverwriteAReclaimByTheSameInstanceName",
+        "upgradesV5WithAnExistingClaimWithoutChangingItsPayload"
+      ]
+    },
+    {
+      "suite": "com.materialflow.integration.IntegrationAdapterContextTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 3.211,
+      "report_sha256": "660325df9b149e7351a6cbe64a7c49e3971533cce3c6283117dbd90a92e66063",
+      "test_names": [
+        "fullSpringContextAndGrpcServerStartTogether",
+        "boot4LoadsConfiguredResilienceAspects"
+      ]
+    },
+    {
+      "suite": "com.materialflow.integration.grpc.SyntheticGrpcServicesTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.152,
+      "report_sha256": "f9c0da8ce3f8ed21f57c401e1255118cb73e50c347293da242f753a718a7332e",
+      "test_names": [
+        "servicesAcceptBoundedSyntheticContracts",
+        "malformedAndRegressiveInputsFailWithInvalidArgument"
+      ]
+    },
+    {
+      "suite": "com.materialflow.projection.health.KafkaStreamsHealthIndicatorTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.096,
+      "report_sha256": "f408c517b6f6c776bd6e7fd56d0184849295262159df458b1f50dbe7fb77e4d2",
+      "test_names": [
+        "reportsFailedStreamsAsDown",
+        "reportsRunningStreamsAsUp"
+      ]
+    },
+    {
+      "suite": "com.materialflow.approval.ApprovalInstanceStateTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.105,
+      "report_sha256": "44da976d47546da178bfc71f6210fe88d1f89fd1b8509aeaad1010c8b1f62030",
+      "test_names": [
+        "enforcesMakerChecker",
+        "delegatesPendingAssignmentWithoutChangingTheTemplateVersion",
+        "freezesTemplateVersionAndRequiresNDistinctApprovers"
+      ]
+    },
+    {
+      "suite": "com.materialflow.credit.CreditAccountTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.075,
+      "report_sha256": "6afb6861aec1cd2f4b1272533bf0b308985d16dcb702a92c39fcc8768a0415e7",
+      "test_names": [
+        "ordinaryReservationCannotExceedLimit",
+        "reserveCaptureAndSettlePreserveCreditLedgerInvariant"
+      ]
+    },
+    {
+      "suite": "com.materialflow.fulfillment.ShipmentStatusTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.088,
+      "report_sha256": "b38e42dcbb16ed406576ec77cac2d9e658cef6a61b3792b066cca13d688f8c38",
+      "test_names": [
+        "statusCanOnlyProgress"
+      ]
+    },
+    {
+      "suite": "com.materialflow.identity.ActorContextTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.079,
+      "report_sha256": "571bbf3023b4f21a3f5e10ed709a39b639cb53013570861314d91d87a9e0a19e",
+      "test_names": [
+        "emptyWarehouseScopeMeansOrganizationWideAccessAndInputsAreCopied",
+        "enforcesRoleOrganizationAndWarehouseScopes"
+      ]
+    },
+    {
+      "suite": "com.materialflow.inventory.InventoryBalanceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.094,
+      "report_sha256": "efa2254121ff4625578c81b605b648800b952e201edaecf0f3d6245f04e086fb",
+      "test_names": [
+        "partialReservationNeverMakesAvailableNegative",
+        "allOrNothingReservationLeavesBalanceUntouchedOnShortage",
+        "staleFencingTokenCannotShip"
+      ]
+    },
+    {
+      "suite": "com.materialflow.pricing.PricingServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.14,
+      "report_sha256": "a43cddcc8f5904191347e276a92b327fcb437a8b0b46ac562e896a7a52d00001",
+      "test_names": [
+        "selectsContractBeforeCustomerRegionAndStandard",
+        "snapshotUsesDecimalArithmeticAndDoesNotReferenceMutableRuleState"
+      ]
+    },
+    {
+      "suite": "com.materialflow.sales.OrderStatusTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 0.122,
+      "report_sha256": "4b65da14f7b872d55f8f569a2754105f3b5200c439ad1242019d0a90f2d4ed41",
+      "test_names": [
+        "permitsDocumentedHappyPathAndRejectsBackwardMovement"
+      ]
+    }
+  ],
+  "coverage": {
+    "covered_lines": 1532,
+    "missed_lines": 408,
+    "percent": 78.97,
+    "scope": "Only emitted JaCoCo reports, not whole-reactor coverage",
+    "resume_eligible": false
+  },
+  "separate_checks": {
+    "python_csv_parser_tests": 3,
+    "promtool": "passed",
+    "helm_lint_render": "passed"
+  },
+  "log_sha256": "f392c6343e32a64e3b60af9bfbea495ee7adab2dbb70bea3f46316bec8a7bfe9"
+}

@@ -1,0 +1,9 @@
+.git
+.git-local
+.codex
+.agents
+.idea
+.vscode
+**/target
+docs/evidence
+*.log

@@ -1,0 +1,9 @@
+{
+  "status": "passed_without_additional_mapper_override",
+  "scope": "Real Boot 3.5.16 Docker idempotency row seeded into real Testcontainers PostgreSQL and replayed through Boot 4 OrderApplicationService",
+  "test": "replaysPersistedBoot3OrderWithoutReapplyingBusinessEffects",
+  "legacy_request_hash": "1d68c81d72185cb8ac30e2b1aad8c6bf0f4938f9b91bc7cebb5d173ca255b0f4",
+  "fixture": "apps/erp-core/src/test/resources/compatibility/boot3-order.json",
+  "fixture_sha256": "3510674f3642cb1815a8aeef41e2e23b95c9396f7b4b053f5dc86acae3774969",
+  "limitation": "Specific persisted create-order record; not exhaustive migration coverage for every request type. No observed hash regression or invented fix."
+}

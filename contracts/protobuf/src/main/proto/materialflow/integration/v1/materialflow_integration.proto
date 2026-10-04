@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package materialflow.integration.v1;
+
+option java_multiple_files = true;
+option java_package = "com.materialflow.contracts.grpc";
+option java_outer_classname = "MaterialFlowIntegrationProto";
+
+service WarehouseTerminalService {
+  rpc BatchSyncInventory(BatchSyncInventoryRequest) returns (BatchSyncInventoryResponse);
+}
+
+service SupplierService {
+  rpc ConfirmPurchaseOrder(ConfirmPurchaseOrderRequest) returns (ConfirmPurchaseOrderResponse);
+}
+
+service TransportService {
+  rpc UpdateShipmentStatus(UpdateShipmentStatusRequest) returns (UpdateShipmentStatusResponse);
+}
+
+service BankFileService {
+  rpc SubmitSyntheticBankFile(SubmitSyntheticBankFileRequest) returns (SubmitSyntheticBankFileResponse);
+}
+
+message InventoryPosition {
+  string organization_id = 1;
+  string warehouse_id = 2;
+  string material_id = 3;
+  string location_id = 4;
+  string on_hand = 5;
+  int64 source_version = 6;
+}
+
+message BatchSyncInventoryRequest {
+  string request_id = 1;
+  repeated InventoryPosition positions = 2;
+}
+
+message BatchSyncInventoryResponse {
+  string request_id = 1;
+  int32 accepted_count = 2;
+  string status = 3;
+}
+
+message ConfirmPurchaseOrderRequest {
+  string request_id = 1;
+  string purchase_order_id = 2;
+  string supplier_id = 3;
+}
+
+message ConfirmPurchaseOrderResponse {
+  string request_id = 1;
+  string purchase_order_id = 2;
+  string confirmation_code = 3;
+  string status = 4;
+  string expected_at = 5;
+}
+
+message UpdateShipmentStatusRequest {
+  string request_id = 1;
+  string shipment_id = 2;
+  string status = 3;
+  string occurred_at = 4;
+}
+
+message UpdateShipmentStatusResponse {
+  string request_id = 1;
+  string shipment_id = 2;
+  string accepted_status = 3;
+}
+
+message SubmitSyntheticBankFileRequest {
+  string request_id = 1;
+  string file_name = 2;
+  bytes content = 3;
+}
+
+message SubmitSyntheticBankFileResponse {
+  string request_id = 1;
+  string content_sha256 = 2;
+  string status = 3;
+}

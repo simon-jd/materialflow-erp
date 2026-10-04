@@ -1,0 +1,45 @@
+server:
+  port: ${SERVER_PORT:8082}
+spring:
+  application:
+    name: materialflow-stream-projection
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    streams:
+      application-id: materialflow-projection-v1
+      state-dir: ${KAFKA_STREAMS_STATE_DIR:/tmp/materialflow-kafka-streams}
+      properties:
+        processing.guarantee: at_least_once
+        num.stream.threads: 2
+        commit.interval.ms: 1000
+        default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+management:
+  # Metrics are scraped by Prometheus; logs stay on stdout. Export only traces over OTLP.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+materialflow:
+  topics:
+    domain: materialflow.domain-events.v1
+    dlq: materialflow.projection-dlq.v1
+logging:
+  structured:
+    format:
+      console: logstash

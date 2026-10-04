@@ -1,0 +1,4 @@
+orders=4813
+outbox_pending=0
+lock_waiters=0
+deadlocks=0,commits=25634,rollbacks=3,blks_hit=2664782,blks_read=545

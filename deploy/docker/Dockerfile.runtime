@@ -1,0 +1,11 @@
+# Package the exact JAR produced by the verified Maven reactor; no second compilation.
+FROM eclipse-temurin:21-jre-alpine
+RUN apk upgrade --no-cache \
+    && apk add --no-cache libstdc++ \
+    && addgroup -S materialflow \
+    && adduser -S -G materialflow -u 10001 materialflow
+WORKDIR /opt/materialflow
+ARG JAR_FILE
+COPY --chown=materialflow:materialflow ${JAR_FILE} app.jar
+USER 10001:10001
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-Djava.security.egd=file:/dev/urandom", "-jar", "/opt/materialflow/app.jar"]

@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "scope": "local synthetic JWT gateway to core; specific role and cross-tenant order assertions",
+  "raw_result": "unauthenticated=401 authorized=201 forbidden=403 cross_tenant=404 order_id=7e9ae9ef-cea0-4ec7-a4b8-cdfc972ed866",
+  "expected_http_statuses": {
+    "unauthenticated": 401,
+    "authorized": 201,
+    "forbidden": 403,
+    "cross_tenant": 404
+  }
+}

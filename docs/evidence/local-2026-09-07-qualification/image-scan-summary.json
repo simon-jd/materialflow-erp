@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-09-07T23:43:13.805961+00:00",
+  "scanner": "Version: 0.74.0\nVulnerability DB:\n  Version: 2\n  UpdatedAt: 2026-09-07 19:06:01.154199452 +0000 UTC\n  NextUpdate: 2026-09-08 19:06:01.154199291 +0000 UTC\n  DownloadedAt: 2026-09-07 23:05:43.666988235 +0000 UTC\nJava DB:\n  Version: 1\n  UpdatedAt: 2026-09-07 01:08:13.76434855 +0000 UTC\n  NextUpdate: 2026-09-10 01:08:13.764347929 +0000 UTC\n  DownloadedAt: 2026-09-07 23:06:06.469797614 +0000 UTC\nCheck Bundle:\n  Digest: sha256:1583562f8b90ed2a071b99f0e5ffff6b57e4ceb6ca3e4796577b4e6a339eb74c\n  DownloadedAt: 2026-09-01 06:54:59.979968236 +0000 UTC\n",
+  "severity_scope": [
+    "HIGH",
+    "CRITICAL"
+  ],
+  "status": "passed",
+  "images": [
+    {
+      "service": "erp-core",
+      "artifact_name": "materialflow-qualification/erp-core:boot4",
+      "image_id": "sha256:d336a8f265fa017922219d5b587c6913d9c33fabfd2c095bb29855e0cd612640",
+      "reported_high_critical": 0,
+      "raw_report_sha256": "bff17fbd5ddcf9d2dd28f36c9545a23b53629986c8b52e4cc808459bf8f36ea6"
+    },
+    {
+      "service": "event-relay",
+      "artifact_name": "materialflow-qualification/event-relay:boot4",
+      "image_id": "sha256:0ff6bd9881067f2b013bd4077f377954086c76c4c4c5e1f81ee8722c4de1d112",
+      "reported_high_critical": 0,
+      "raw_report_sha256": "1da6e0d4b12792b9c7f5b60ce372412eba1ad7f7da23d49ff207bd9e9a00c67d"
+    },
+    {
+      "service": "edge-gateway",
+      "artifact_name": "materialflow-qualification/edge-gateway:boot4",
+      "image_id": "sha256:2734dea5cd34e87e6781aada7a040e495c6c32985db3b64982ad3aa6e9df6520",
+      "reported_high_critical": 0,
+      "raw_report_sha256": "3152540bcdccb5e4c6d507e48df646a8302d05a24fc0ce0906da7773618ad705"
+    },
+    {
+      "service": "stream-projection",
+      "artifact_name": "materialflow-qualification/stream-projection:boot4",
+      "image_id": "sha256:67e1b0a3b840f4a68433a5695502257ad21acb711be59b01ac341a81dce973f0",
+      "reported_high_critical": 0,
+      "raw_report_sha256": "23f171d8083c85e712ff1e019c90de3694b7be89d4be69fc3e8225b5bc73af25"
+    },
+    {
+      "service": "integration-adapter",
+      "artifact_name": "materialflow-qualification/integration-adapter:boot4",
+      "image_id": "sha256:beea52458a35ba14c24d5944eb127112effa5b04333abbb3141909383bb29fc0",
+      "reported_high_critical": 0,
+      "raw_report_sha256": "b0c75bf5b4c91fcd26e45dbb7644d7ed92a15cbff80e8e65b30c7dee3e3d7b67"
+    }
+  ],
+  "initial_tomcat_findings": [
+    "CVE-2026-65182",
+    "CVE-2026-65905",
+    "CVE-2026-68525"
+  ],
+  "resolved_by": "Tomcat 11.0.24 -> 11.0.25",
+  "limitations": [
+    "No exploitability assessment or blanket security-clean claim",
+    "Lower severities and supporting service images not included",
+    "Results depend on scanner database timestamp and exact image ID"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "scope": "local only; no hosted CI run",
+  "checks": [
+    {
+      "name": "clean_verify",
+      "command": "mvn -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 clean verify",
+      "exit_code": 0,
+      "log": "verify.log.gz",
+      "completed_at": "2026-09-06T15:53:31-07:00"
+    },
+    {
+      "name": "static_quality",
+      "command": "mvn -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 -Pquality -DskipTests verify",
+      "exit_code": 0,
+      "log": "quality.log.gz",
+      "completed_at": "2026-09-06T16:13:48-07:00"
+    },
+    {
+      "name": "promtool_alert_scenarios",
+      "command": "docker run --rm --network none --read-only --tmpfs /tmp:rw,nosuid,size=64m --cap-drop ALL --security-opt no-new-privileges --entrypoint /bin/promtool -v \"/home/postedism/Desktop/Java ERP/deploy/compose/prometheus:/rules:ro\" -w /rules prom/prometheus:v3.6.0 test rules alerts.test.yml",
+      "exit_code": 0,
+      "stdout": "  SUCCESS\n\n",
+      "scenarios": 2
+    },
+    {
+      "name": "compose_config",
+      "command": "docker compose -f deploy/compose/compose.yml config --quiet",
+      "exit_code": 0
+    },
+    {
+      "name": "dashboard_json",
+      "command": "python3 -m json.tool deploy/compose/grafana/dashboards/materialflow-overview.json",
+      "exit_code": 0
+    },
+    {
+      "name": "whitespace",
+      "command": "git --git-dir=.git-local diff --check",
+      "exit_code": 0
+    }
+  ],
+  "not_run": [
+    "new load/performance benchmark",
+    "fresh application-image rebuild/scan/deployment",
+    "hosted CI",
+    "actual process-kill/offset-crash test",
+    "cloud deployment"
+  ],
+  "resolved_harness_failures": [
+    "Initial sandbox Maven DNS failure; rerun with authorized network/Docker access passed.",
+    "Promtool first container lacked writable /tmp; adding container tmpfs passed."
+  ]
+}

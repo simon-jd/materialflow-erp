@@ -1,0 +1,48 @@
+{
+  "project": "materialflow-qualification-final",
+  "scope": "local synthetic Docker, real JVM SIGKILL",
+  "started_at": "2026-09-07T23:56:56.815170+00:00",
+  "consumer": {
+    "status": "passed",
+    "window": "Inbox INSERT blocked before transaction commit; source offset retained",
+    "event_id": "086e65ba-aa5b-433c-ae5c-b6f9e2e6c3f2",
+    "offset_before": 7219,
+    "offset_after": 7221,
+    "inbox_rows_after_replay": 1,
+    "process": {
+      "container_id": "c9c57250e94a",
+      "pid_before": 2523439,
+      "started_before": "2026-09-07T23:41:46.631860318Z",
+      "exit_code": 137,
+      "oom_killed": false,
+      "pid_after": 2772524,
+      "started_after": "2026-09-07T23:57:03.526259825Z"
+    },
+    "limitation": "Probe has no inventory effect; inventory-effect atomicity is covered separately by JUnit."
+  },
+  "relay": {
+    "status": "passed",
+    "window": "Kafka ACK observed, PostgreSQL PUBLISHED transaction blocked before commit",
+    "event_id": "df65e5c1-23ea-453f-a3a2-86d9831e040a",
+    "topic": "materialflow.qualification.df65e5c1-23ea-453f-a3a2-86d9831e040a",
+    "claim_before": "CLAIMED:1:2815c84f-2dde-4cf6-b345-5c887b42c51a",
+    "final_status": "PUBLISHED",
+    "attempts": 2,
+    "kafka_offsets": [
+      0,
+      1
+    ],
+    "process": {
+      "container_id": "940ae1a9b39d",
+      "pid_before": 2523431,
+      "started_before": "2026-09-07T23:41:46.627965417Z",
+      "exit_code": 137,
+      "oom_killed": false,
+      "pid_after": 2792450,
+      "started_after": "2026-09-07T23:57:52.679329235Z"
+    },
+    "limitation": "At-least-once replay is expected; two broker records are not exactly-once delivery."
+  },
+  "status": "passed",
+  "finished_at": "2026-09-07T23:58:23.310382+00:00"
+}

@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: MaterialFlow
+    folder: MaterialFlow
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

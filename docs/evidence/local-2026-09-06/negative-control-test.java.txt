@@ -1,0 +1,139 @@
+package com.materialflow.relay.outbox;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+@Testcontainers
+class OutboxRepositoryIntegrationTest {
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17.6-alpine")
+            .withDatabaseName("relay").withUsername("relay").withPassword("relay");
+
+    private JdbcTemplate jdbc;
+    private OutboxRepository repository;
+
+    @BeforeEach
+    void createSchema() {
+        var dataSource = new DriverManagerDataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(),
+                POSTGRES.getPassword());
+        jdbc = new JdbcTemplate(dataSource);
+        repository = new OutboxRepository(jdbc);
+        jdbc.execute("DROP TABLE IF EXISTS outbox_events");
+        jdbc.execute("""
+                CREATE TABLE outbox_events (
+                    id UUID PRIMARY KEY,
+                    topic VARCHAR(200) NOT NULL,
+                    event_key VARCHAR(200) NOT NULL,
+                    payload JSONB NOT NULL,
+                    trace_parent VARCHAR(55),
+                    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+                    attempt_count INTEGER NOT NULL DEFAULT 0,
+                    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    claimed_by VARCHAR(200),
+                    claimed_at TIMESTAMPTZ,
+                    last_error VARCHAR(1000),
+                    occurred_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    published_at TIMESTAMPTZ
+                )
+                """);
+    }
+
+    @Test
+    void expiredFinalAttemptBecomesDeadLetterInsteadOfRemainingClaimedForever() {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO outbox_events (id, topic, event_key, payload)
+                VALUES (?, 'test', 'key', '{}')
+                """, id);
+        repository.claim("relay-a", 1, 1, Duration.ofSeconds(30));
+        jdbc.update("UPDATE outbox_events SET claimed_at = CURRENT_TIMESTAMP - INTERVAL '2 minutes'");
+        @SuppressWarnings("unchecked")
+        var kafka = (org.springframework.kafka.core.KafkaTemplate<String, String>)
+                org.mockito.Mockito.mock(org.springframework.kafka.core.KafkaTemplate.class);
+        var properties = new RelayProperties("recovery", 1, 1, Duration.ofSeconds(30),
+                Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofSeconds(4));
+        new OutboxRelay(repository, kafka, properties,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry(),
+                io.micrometer.tracing.Tracer.NOOP,
+                io.micrometer.tracing.propagation.Propagator.NOOP).publishBatch();
+        assertThat(jdbc.queryForObject("SELECT status FROM outbox_events WHERE id = ?", String.class, id))
+                .isEqualTo("DEAD_LETTER");
+    }
+
+    @Test
+    void oldCompletionCannotOverwriteAReclaimByTheSameInstanceName() {
+        jdbc.update("""
+                INSERT INTO outbox_events (id, topic, event_key, payload)
+                VALUES (?, 'test', 'key', '{}')
+                """, UUID.randomUUID());
+        OutboxEvent old = repository.claim("reused-hostname", 1, 5, Duration.ofSeconds(30)).getFirst();
+        jdbc.update("UPDATE outbox_events SET claimed_at = CURRENT_TIMESTAMP - INTERVAL '2 minutes'");
+        repository.claim("reused-hostname", 1, 5, Duration.ofSeconds(30));
+        assertThatThrownBy(() -> repository.markPublished(old.id(), "reused-hostname"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void concurrentRelayInstancesClaimDisjointBatchesAndRecoverStaleClaims() throws Exception {
+        for (int index = 0; index < 12; index++) {
+            jdbc.update("""
+                    INSERT INTO outbox_events (id, topic, event_key, payload, occurred_at)
+                    VALUES (?, 'materialflow.domain-events.v1', ?, CAST(? AS jsonb),
+                            CURRENT_TIMESTAMP + (? * INTERVAL '1 millisecond'))
+                    """, UUID.randomUUID(), "aggregate-" + index, "{\"index\":" + index + "}", index);
+        }
+
+        CountDownLatch start = new CountDownLatch(1);
+        List<List<OutboxEvent>> batches = new ArrayList<>();
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var first = executor.submit(() -> {
+                start.await();
+                return repository.claim("relay-a", 10, 5, Duration.ofSeconds(30));
+            });
+            var second = executor.submit(() -> {
+                start.await();
+                return repository.claim("relay-b", 10, 5, Duration.ofSeconds(30));
+            });
+            start.countDown();
+            batches.add(first.get());
+            batches.add(second.get());
+        }
+
+        List<OutboxEvent> all = batches.stream().flatMap(List::stream).toList();
+        assertThat(all).hasSize(12);
+        assertThat(new HashSet<>(all.stream().map(OutboxEvent::id).toList())).hasSize(12);
+        assertThat(all).allMatch(event -> event.attemptCount() == 1);
+        assertThat(batches).allMatch(batch -> !batch.isEmpty());
+
+        OutboxEvent owned = batches.getFirst().getFirst();
+        String owner = batches.getFirst().stream().anyMatch(event -> event.id().equals(owned.id()))
+                ? "relay-a" : "relay-b";
+        assertThatThrownBy(() -> repository.markPublished(owned.id(), "not-the-owner"))
+                .isInstanceOf(IllegalStateException.class);
+        repository.markPublished(owned.id(), owner);
+
+        OutboxEvent stale = all.stream().filter(event -> !event.id().equals(owned.id())).findFirst().orElseThrow();
+        jdbc.update("UPDATE outbox_events SET claimed_at = CURRENT_TIMESTAMP - INTERVAL '2 minutes' WHERE id = ?",
+                stale.id());
+        List<OutboxEvent> recovered = repository.claim("relay-recovery", 1, 5, Duration.ofSeconds(30));
+        assertThat(recovered).singleElement().satisfies(event -> {
+            assertThat(event.id()).isEqualTo(stale.id());
+            assertThat(event.attemptCount()).isEqualTo(2);
+        });
+    }
+}

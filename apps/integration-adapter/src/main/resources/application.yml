@@ -1,0 +1,63 @@
+server:
+  port: ${SERVER_PORT:8083}
+  shutdown: graceful
+spring:
+  application:
+    name: materialflow-integration-adapter
+management:
+  # Metrics are scraped by Prometheus; logs stay on stdout. Export only traces over OTLP.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+materialflow:
+  grpc:
+    port: ${GRPC_PORT:9090}
+    client:
+      host: ${GRPC_CLIENT_HOST:localhost}
+      port: ${GRPC_CLIENT_PORT:${GRPC_PORT:9090}}
+resilience4j:
+  timelimiter:
+    instances:
+      supplier:
+        timeout-duration: 3s
+        cancel-running-future: true
+  retry:
+    instances:
+      supplier:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  circuitbreaker:
+    instances:
+      supplier:
+        sliding-window-size: 20
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+  bulkhead:
+    instances:
+      supplier:
+        max-concurrent-calls: 8
+        max-wait-duration: 0
+logging:
+  structured:
+    format:
+      console: logstash

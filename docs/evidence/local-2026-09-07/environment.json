@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-09-07T22:42:36.691007+00:00",
+  "mode": "local_real_postgresql_and_kafka",
+  "os": "Linux-7.0.0-29-generic-x86_64-with-glibc2.43",
+  "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+  "logical_cpus": "32",
+  "memory_kib": 129209084,
+  "java": "openjdk version \"21.0.12\" 2026-07-21 LTS\nOpenJDK Runtime Environment Temurin-21.0.12+8 (build 21.0.12+8-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12+8 (build 21.0.12+8-LTS, mixed mode, sharing)",
+  "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /home/postedism/.local/share/mise/installs/maven/3.9/apache-maven-3.9.16\nJava version: 21.0.12, vendor: Eclipse Adoptium, runtime: /home/postedism/.local/share/mise/installs/java/temurin-21.0.12+8.0.LTS\nDefault locale: en, platform encoding: UTF-8\nOS name: \"linux\", version: \"7.0.0-29-generic\", arch: \"amd64\", family: \"unix\"",
+  "docker": "29.8.0",
+  "dependencies": {
+    "spring_boot": "3.5.16 (OSS ended)",
+    "spring_cloud": "2025.0.3",
+    "spring_kafka": "3.3.16",
+    "kafka_clients": "3.9.2",
+    "postgresql_jdbc": "42.7.12",
+    "testcontainers": "1.21.4"
+  },
+  "container_images": {
+    "postgres:17.6-alpine": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "apache/kafka:4.1.0": "sha256:bff074a5d0051dbc0bbbcd25b045bb1fe84833ec0d3c7c965d1797dd289ec88f",
+    "prom/prometheus:v3.6.0": "sha256:76947e7ef22f8a698fc638f706685909be425dbe09bd7a2cd7aca849f79b5f64"
+  },
+  "topology": "Single Linux host, ephemeral Testcontainers PostgreSQL/Kafka; production listener/factory instantiated in JUnit JVM, proxied transactional Inbox and real Flyway schema. Real PostgreSQL server lock_timeout=200ms and ACCESS EXCLUSIVE lock; broker auto-topic-creation disabled; consumer object stopped/recreated, no JVM kill.",
+  "dataset": "Synthetic ERP seed plus unique domain envelopes/invalid strings; isolated one-partition topics and groups. No production/cloud/ML hardware."
+}

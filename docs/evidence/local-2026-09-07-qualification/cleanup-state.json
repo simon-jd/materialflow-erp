@@ -1,0 +1,219 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-09-08T00:01:03.528863+00:00",
+  "projects": {
+    "materialflow-qualification": [
+      {
+        "name": "materialflow-qualification-edge-gateway-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-event-relay-1",
+        "status": "exited",
+        "exit_code": 137
+      },
+      {
+        "name": "materialflow-qualification-erp-core-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-stream-projection-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-grafana-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-otel-collector-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-postgres-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-redis-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-kafka-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-jaeger-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-prometheus-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-keycloak-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-integration-adapter-1",
+        "status": "exited",
+        "exit_code": 143
+      }
+    ],
+    "materialflow-qualification-boot4": [
+      {
+        "name": "materialflow-qualification-boot4-edge-gateway-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-boot4-erp-core-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-boot4-stream-projection-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-boot4-event-relay-1",
+        "status": "exited",
+        "exit_code": 137
+      },
+      {
+        "name": "materialflow-qualification-boot4-kafka-init-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-integration-adapter-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-boot4-grafana-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-otel-collector-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-postgres-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-redis-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-kafka-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-boot4-jaeger-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-prometheus-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-boot4-keycloak-1",
+        "status": "exited",
+        "exit_code": 143
+      }
+    ],
+    "materialflow-qualification-final": [
+      {
+        "name": "materialflow-qualification-final-edge-gateway-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-final-erp-core-1",
+        "status": "exited",
+        "exit_code": 137
+      },
+      {
+        "name": "materialflow-qualification-final-event-relay-1",
+        "status": "exited",
+        "exit_code": 137
+      },
+      {
+        "name": "materialflow-qualification-final-stream-projection-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-final-otel-collector-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-kafka-init-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-grafana-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-postgres-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-redis-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-kafka-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-final-jaeger-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-integration-adapter-1",
+        "status": "exited",
+        "exit_code": 143
+      },
+      {
+        "name": "materialflow-qualification-final-prometheus-1",
+        "status": "exited",
+        "exit_code": 0
+      },
+      {
+        "name": "materialflow-qualification-final-keycloak-1",
+        "status": "exited",
+        "exit_code": 143
+      }
+    ]
+  },
+  "action": "Stop task-specific qualification containers; images, containers and synthetic volumes preserved; no global prune or action on other projects.",
+  "final_fixture_cleanup": "post-drill-state.json"
+}

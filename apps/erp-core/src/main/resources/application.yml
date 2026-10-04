@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: materialflow-erp-core
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/materialflow}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/materialflow/protocol/openid-connect/certs}
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${MATERIALFLOW_DB_URL:jdbc:postgresql://localhost:5432/materialflow}
+    username: ${MATERIALFLOW_DB_USER:materialflow}
+    password: ${MATERIALFLOW_DB_PASSWORD:materialflow}
+    hikari:
+      maximum-pool-size: ${MATERIALFLOW_DB_POOL_SIZE:20}
+      minimum-idle: 2
+      connection-timeout: 3000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    validate-migration-naming: true
+  kafka:
+    bootstrap-servers: ${MATERIALFLOW_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      observation-enabled: true
+    consumer:
+      enable-auto-commit: false
+      # A new group must replay retained business events, including pre-start publications.
+      auto-offset-reset: earliest
+      properties:
+        isolation.level: read_committed
+  data:
+    redis:
+      repositories:
+        enabled: false
+      host: ${MATERIALFLOW_REDIS_HOST:localhost}
+      port: ${MATERIALFLOW_REDIS_PORT:6379}
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  # Metrics are scraped by Prometheus; logs stay on stdout. Export only traces over OTLP.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+materialflow:
+  security:
+    enabled: ${MATERIALFLOW_SECURITY_ENABLED:false}
+  reservation:
+    ttl: PT2H
+    expiry-enabled: ${MATERIALFLOW_RESERVATION_EXPIRY_ENABLED:true}
+    expiry-poll-delay: 30s
+  approval:
+    default-template-id: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+  kafka:
+    consumer:
+      enabled: ${MATERIALFLOW_KAFKA_CONSUMER_ENABLED:false}
+      topic: materialflow.domain-events.v1
+      group-id: erp-core-reallocation-v1
+
+logging:
+  structured:
+    format:
+      console: logstash

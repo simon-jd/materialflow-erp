@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-09-07T23:59:13.555471+00:00",
+  "project": "materialflow-qualification-final",
+  "health": {
+    "erp-core": "UP",
+    "edge-gateway": "UP",
+    "stream-projection": "UP",
+    "integration-adapter": "UP",
+    "event-relay": "UP"
+  },
+  "database_checks": {
+    "fixture_triggers": 0,
+    "fixture_functions": 0,
+    "fixture_sessions": 0,
+    "lock_waiters": 0,
+    "unpublished_outbox": 0
+  },
+  "consumer_groups": "GROUP                    TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                              HOST            CLIENT-ID\nerp-core-reallocation-v1 materialflow.domain-events.v1 0          7221            7221            0               consumer-erp-core-reallocation-v1-1-49abc1dd-2eb4-40c9-a045-ac83081bbb05 /172.29.0.11    consumer-erp-core-reallocation-v1-1\n\nGROUP                      TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                                                                  HOST            CLIENT-ID\nmaterialflow-projection-v1 materialflow.domain-events.v1 0          7221            7221            0               materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer-13e91b91-c09d-4810-abbf-8ac40465bb4b /172.29.0.12    materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer",
+  "durable_kill_results_rechecked": true,
+  "scope": "After actual kill/restart; before preserving data and stopping qualification containers"
+}

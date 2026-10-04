@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+rule_files: [/etc/prometheus/alerts.yml]
+scrape_configs:
+  - job_name: erp-core
+    metrics_path: /actuator/prometheus
+    static_configs: [{targets: [erp-core:8080]}]
+  - job_name: edge-gateway
+    metrics_path: /actuator/prometheus
+    static_configs: [{targets: [edge-gateway:8081]}]
+  - job_name: stream-projection
+    metrics_path: /actuator/prometheus
+    static_configs: [{targets: [stream-projection:8082]}]
+  - job_name: integration-adapter
+    metrics_path: /actuator/prometheus
+    static_configs: [{targets: [integration-adapter:8083]}]
+  - job_name: event-relay
+    metrics_path: /actuator/prometheus
+    static_configs: [{targets: [event-relay:8084]}]
+  - job_name: otel-collector
+    static_configs: [{targets: [otel-collector:8889]}]

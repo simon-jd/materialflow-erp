@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "project": "materialflow-qualification-final",
+  "scope": "local synthetic Docker",
+  "checked_at": "2026-09-07T23:42:30.868496+00:00",
+  "health": {
+    "erp-core": "UP",
+    "edge-gateway": "UP",
+    "stream-projection": "UP",
+    "integration-adapter": "UP",
+    "event-relay": "UP"
+  },
+  "projection": {
+    "aggregate_id": "7e9ae9ef-cea0-4ec7-a4b8-cdfc972ed866",
+    "version": 2
+  },
+  "synthetic_grpc": {
+    "status": "CONFIRMED",
+    "purchase_order_id": "389d2c99-65c9-4388-851b-38137a78e0aa"
+  },
+  "trace": {
+    "trace_id": "5b2ca51a4adc29f9fd8582d622c6a6c9",
+    "services": [
+      "materialflow-edge-gateway",
+      "materialflow-erp-core",
+      "materialflow-event-relay"
+    ],
+    "operation_names": [
+      "HTTP POST",
+      "authenticate bearertoken",
+      "authorize exchange",
+      "authorize request",
+      "domain event consume",
+      "eval",
+      "evalsha",
+      "get",
+      "http post",
+      "http post /api/v1/orders",
+      "materialflow.domain-events.v1 send",
+      "outbox publish",
+      "sales order database transaction",
+      "secured request",
+      "security filterchain after",
+      "security filterchain before"
+    ],
+    "span_count": 19
+  }
+}

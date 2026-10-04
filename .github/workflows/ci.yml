@@ -1,0 +1,98 @@
+name: private-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {distribution: temurin, java-version: '21', cache: maven}
+      - name: Compile, test, integration, ArchUnit, Flyway and coverage
+        run: mvn -B -ntp verify
+      - name: Static analysis
+        run: mvn -B -ntp -Pquality -DskipTests verify
+      - name: Performance evidence parser regression tests
+        run: python3 -m unittest discover -s tests/performance -p 'test_*.py'
+      - name: Upload test and coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/site/jacoco/**
+
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: {node-version: '22'}
+      - name: Lint OpenAPI
+        run: npx --yes @redocly/cli@2.1.0 lint contracts/openapi/materialflow-erp-v1.yaml
+      - uses: bufbuild/buf-setup-action@v1
+        with: {version: '1.57.0'}
+      - name: Lint Protobuf
+        working-directory: contracts/protobuf
+        run: buf lint
+      - name: Validate event JSON Schema syntax
+        run: node -e "JSON.parse(require('fs').readFileSync('contracts/events/src/main/resources/schema/event-envelope-v1.schema.json'))"
+
+  platform:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with: {version: v4.2.3}
+      - name: Compose validation
+        run: |
+          docker compose -f deploy/compose/compose.yml config --quiet
+          docker compose --env-file deploy/compose/qualification.env -f deploy/compose/compose.yml -f deploy/compose/qualification.yml config --quiet
+      - name: Outbox alert regression scenarios
+        run: >-
+          docker run --rm --network none --read-only --tmpfs /tmp:rw,nosuid,size=64m
+          --cap-drop ALL --security-opt no-new-privileges --entrypoint /bin/promtool
+          -v "${{ github.workspace }}/deploy/compose/prometheus:/rules:ro" -w /rules
+          prom/prometheus:v3.6.0 test rules alerts.test.yml
+      - name: Helm validation
+        run: helm lint deploy/helm/materialflow && helm template materialflow deploy/helm/materialflow >/tmp/materialflow.yaml
+      - name: Build non-root images
+        run: |
+          for app in erp-core event-relay edge-gateway stream-projection integration-adapter; do
+            docker build --build-arg MODULE="apps/${app}" -f deploy/docker/Dockerfile -t "materialflow/${app}:ci" .
+          done
+      - name: Scan images
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: materialflow/erp-core:ci
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with: {sarif_file: trivy-results.sarif}
+
+  supply-chain:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v5
+        with: {distribution: temurin, java-version: '21', cache: maven}
+      - uses: gitleaks/gitleaks-action@v2
+        env: {GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+      - name: Generate CycloneDX SBOM
+        run: mvn -B -ntp -DskipTests org.cyclonedx:cyclonedx-maven-plugin:2.9.1:makeAggregateBom
+      - uses: actions/upload-artifact@v4
+        with: {name: sbom, path: target/bom.*}

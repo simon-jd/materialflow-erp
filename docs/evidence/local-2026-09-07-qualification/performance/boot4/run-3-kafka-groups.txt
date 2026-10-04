@@ -1,0 +1,6 @@
+
+GROUP                    TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                              HOST            CLIENT-ID
+erp-core-reallocation-v1 materialflow.domain-events.v1 0          7219            7219            0               consumer-erp-core-reallocation-v1-1-248d3402-fcee-451e-8e3e-f8b3194c620f /172.29.0.11    consumer-erp-core-reallocation-v1-1
+
+GROUP                      TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                                                                  HOST            CLIENT-ID
+materialflow-projection-v1 materialflow.domain-events.v1 0          7219            7219            0               materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer-13e91b91-c09d-4810-abbf-8ac40465bb4b /172.29.0.12    materialflow-projection-v1-4f956f53-235c-4190-9a6a-3d942010ed8a-StreamThread-1-consumer

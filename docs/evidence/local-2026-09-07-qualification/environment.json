@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-09-07T23:40:38.364880+00:00",
+  "mode": "local Docker Compose and real Testcontainers; synthetic data",
+  "os": "Linux-7.0.0-29-generic-x86_64-with-glibc2.43",
+  "cpu": "13th Gen Intel Core i9-13900K",
+  "logical_cpus": 32,
+  "java": "openjdk version \"21.0.12\" 2026-07-21 LTS\nOpenJDK Runtime Environment Temurin-21.0.12+8 (build 21.0.12+8-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12+8 (build 21.0.12+8-LTS, mixed mode, sharing)",
+  "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /home/postedism/.local/share/mise/installs/maven/3.9/apache-maven-3.9.16\nJava version: 21.0.12, vendor: Eclipse Adoptium, runtime: /home/postedism/.local/share/mise/installs/java/temurin-21.0.12+8.0.LTS\nDefault locale: en, platform encoding: UTF-8\nOS name: \"linux\", version: \"7.0.0-29-generic\", arch: \"amd64\", family: \"unix\"",
+  "docker": "29.8.0",
+  "dependencies": {
+    "spring_boot": "4.0.8",
+    "spring_cloud": "2025.1.2",
+    "mybatis_starter": "4.0.1",
+    "spring_kafka": "4.0.7",
+    "kafka_clients_streams": "4.1.2",
+    "jackson": "3.1.5",
+    "testcontainers": "2.0.5",
+    "junit_jupiter": "6.0.3",
+    "tomcat": "11.0.25",
+    "resilience4j": "2.4.0",
+    "protobuf_compiler_runtime": "4.33.5",
+    "grpc": "1.75.0",
+    "postgresql_jdbc": "42.7.12"
+  },
+  "topology": "Single shared Linux workstation; five Java apps, one PostgreSQL, one Kafka broker, Redis, synthetic Keycloak and observability services; each Java app limited to 2 CPUs / 1 GiB",
+  "dataset": "Synthetic ERP seed, unique fault probes, JWT order writes; no customer data/cloud/production/hardware integration"
+}

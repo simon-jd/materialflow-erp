@@ -1,0 +1,13 @@
+{
+  "mode": "isolated_source_copy_with_only_exception_specific_BackOff_selection_removed",
+  "mutation": "Remove handler.setBackOffFunction((record, exception) -> DomainEventFailurePolicy.backOff(exception));",
+  "source": "apps/erp-core/src/main/java/com/materialflow/erp/events/KafkaConsumerConfiguration.java",
+  "command": "mvn -o -B -ntp -Dmaven.repo.local=/tmp/materialflow-m2 -pl apps/erp-core -am -Dtest=DomainEventConsumerRecoveryIntegrationTest#databaseLockOutlivesOldRetryBudgetWithoutDeadLetterOrOffsetAdvance -Dsurefire.failIfNoSpecifiedTests=false test",
+  "exit_code": 1,
+  "expected_failure": true,
+  "tests": 1,
+  "failures": 1,
+  "errors": 0,
+  "assertion": "Last listener failure: org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [INSERT INTO consumer_inbox (event_id, consumer_name, organization_id)\nVALUES (?, ?, ?) ON CONFLICT DO NOTHING\n]; SQL state [55P03]; error code [0]; ERROR: canceling statement due to lock timeout\n  Position: 13",
+  "limitations": "Restores old uniform finite retry selection only, not a historical Git checkout. Additional classification/metrics stay present to observe the boundary."
+}
