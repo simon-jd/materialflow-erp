@@ -1,5 +1,5 @@
 # Package the exact JAR produced by the verified Maven reactor; no second compilation.
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN apk upgrade --no-cache \
     && apk add --no-cache libstdc++ \
     && addgroup -S materialflow \

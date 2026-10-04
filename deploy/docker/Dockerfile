@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp -pl "${MODULE}" -am -DskipTe
     && find "${MODULE}/target" -maxdepth 1 -type f -name '*.jar' ! -name '*.original' \
        -exec cp '{}' /opt/app.jar \;
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN apk upgrade --no-cache \
     && apk add --no-cache libstdc++ \
     && addgroup -S materialflow \
