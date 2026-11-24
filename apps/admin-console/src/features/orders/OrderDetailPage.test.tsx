@@ -66,7 +66,7 @@ describe("OrderDetailPage", () => {
     await user.click(screen.getByRole("button", { name: "Approve" }));
 
     const decisions = await screen.findByRole("list", { name: "Decisions" });
-    expect(within(decisions).getByRole("listitem")).toHaveTextContent(/^Approve by 66666666 on /);
+    expect(within(decisions).getByRole("listitem")).toHaveTextContent(/^Approved by 66666666 on /);
     expect(decision).toEqual({ decision: "APPROVE" });
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
   });

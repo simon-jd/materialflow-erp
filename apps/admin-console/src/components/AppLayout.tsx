@@ -1,5 +1,6 @@
 import { Boxes, ClipboardCheck, LogOut, Package, ShoppingCart } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
+import { hasRole, Role } from "@/auth/session";
 import { useSession } from "@/auth/session-context";
 import { shortId } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,15 @@ const NAVIGATION = [
   { to: "/inventory", label: "Inventory", icon: Package },
 ] as const;
 
+/** What the signed-in user can do in this console; the full role list is in the tooltip. */
+const CAPABILITIES = [
+  { role: Role.SalesOrderWrite, label: "Sales" },
+  { role: Role.ApprovalDecide, label: "Approver" },
+] as const;
+
 export function AppLayout() {
   const session = useSession();
-  const roles = [...session.roles].sort();
+  const capabilities = CAPABILITIES.filter(({ role }) => hasRole(session, role)).map(({ label }) => label);
   return (
     <div className="min-h-dvh">
       <header className="border-b bg-card">
@@ -41,24 +48,22 @@ export function AppLayout() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-end whitespace-nowrap">
               <span className="font-medium">{session.displayName}</span>
               <span className="text-xs text-muted-foreground">
                 Organization {shortId(session.organizationId)}
               </span>
             </div>
-            <ul className="hidden gap-1 md:flex" aria-label="Roles">
-              {roles.length === 0 ? (
-                <li>
-                  <Badge variant="outline">Read-only</Badge>
+            <ul
+              className="hidden gap-1 sm:flex"
+              aria-label="Roles"
+              title={[...session.roles].sort().join(", ")}
+            >
+              {(capabilities.length === 0 ? ["Read-only"] : capabilities).map((label) => (
+                <li key={label}>
+                  <Badge variant="outline">{label}</Badge>
                 </li>
-              ) : (
-                roles.map((role) => (
-                  <li key={role}>
-                    <Badge variant="outline">{role}</Badge>
-                  </li>
-                ))
-              )}
+              ))}
             </ul>
             <Button variant="ghost" size="sm" onClick={session.signOut}>
               <LogOut aria-hidden />
