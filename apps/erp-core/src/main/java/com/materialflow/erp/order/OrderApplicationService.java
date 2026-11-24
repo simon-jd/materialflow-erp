@@ -390,26 +390,37 @@ public class OrderApplicationService {
                 locked.put(line.id(), row);
             }
         }
+        // Several lines may share one balance row: judge their combined demand and chain their writes.
+        Map<UUID, BigDecimal> demandByBalance = new HashMap<>();
+        lines.forEach(line -> {
+            HotPathMapper.InventoryRow row = locked.get(line.id());
+            if (row != null) {
+                demandByBalance.merge(row.id(), line.request().quantity(), BigDecimal::add);
+            }
+        });
         boolean allAvailable = lines.stream().allMatch(line -> {
             HotPathMapper.InventoryRow row = locked.get(line.id());
-            return row != null && row.onHand().subtract(row.reserved()).compareTo(line.request().quantity()) >= 0;
+            return row != null && row.onHand().subtract(row.reserved()).compareTo(demandByBalance.get(row.id())) >= 0;
         });
 
+        Map<UUID, InventoryBalance> balances = new HashMap<>();
         BigDecimal totalAllocated = BigDecimal.ZERO;
         for (PreparedLine line : lines) {
             HotPathMapper.InventoryRow row = locked.get(line.id());
             BigDecimal allocated = BigDecimal.ZERO;
             long fencingToken = 0;
             if (row != null && (allowPartial || allAvailable)) {
-                InventoryBalance balance = new InventoryBalance(row.onHand(), row.reserved(), row.inTransit(), row.version());
+                InventoryBalance balance = balances.computeIfAbsent(row.id(),
+                        id -> new InventoryBalance(row.onHand(), row.reserved(), row.inTransit(), row.version()));
                 var result = balance.reserve(line.request().quantity(), allowPartial);
                 allocated = result.allocated();
                 fencingToken = result.fencingToken();
                 if (allocated.signum() > 0) {
                     if (hotPath.updateInventory(row.id(), result.balance().onHand(), result.balance().reserved(),
-                            result.balance().inTransit(), row.version()) != 1) {
+                            result.balance().inTransit(), balance.version()) != 1) {
                         throw BusinessException.conflict("INVENTORY_CONCURRENT_UPDATE", "Inventory changed concurrently");
                     }
+                    balances.put(row.id(), result.balance());
                     UUID reservationId = UUID.randomUUID();
                     jdbc.update("""
                             INSERT INTO inventory_reservations

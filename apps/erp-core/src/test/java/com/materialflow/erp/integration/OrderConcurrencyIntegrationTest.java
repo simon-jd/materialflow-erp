@@ -165,6 +165,36 @@ class OrderConcurrencyIntegrationTest {
                 """, sku.material())).isEqualByComparingTo("3360.00");
     }
 
+    @Test
+    void linesSharingOneBalanceAreCheckedAndReservedAgainstTheirCombinedDemand() {
+        HotSku sku = hotSku("SAME-ROW-01", new BigDecimal("20"));
+        UUID customer = customersWithCredit("SAME-ROW", 1).getFirst();
+
+        var reserved = orders.create(new CreateOrderRequest(customer, false,
+                List.of(sku.line(new BigDecimal("6")), sku.line(new BigDecimal("9")))), "same-row-reserved", SALES);
+        // 5 units remain: each line fits on its own, but all-or-nothing must judge the combined 8.
+        var backordered = orders.create(new CreateOrderRequest(customer, false,
+                List.of(sku.line(new BigDecimal("4")), sku.line(new BigDecimal("4")))), "same-row-backordered", SALES);
+        var partial = orders.create(new CreateOrderRequest(customer, true,
+                List.of(sku.line(new BigDecimal("3")), sku.line(new BigDecimal("3")))), "same-row-partial", SALES);
+
+        assertThat(reserved.status()).isEqualTo("RESERVED");
+        assertThat(reserved.lines()).extracting(OrderResponse.Line::allocatedQuantity)
+                .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .containsExactly(new BigDecimal("6"), new BigDecimal("9"));
+        assertThat(backordered.status()).isEqualTo("BACKORDERED");
+        assertThat(partial.status()).isEqualTo("PARTIALLY_ALLOCATED");
+        assertThat(partial.lines()).extracting(OrderResponse.Line::allocatedQuantity)
+                .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .containsExactly(new BigDecimal("3"), new BigDecimal("2"));
+        var balance = jdbc.queryForMap("SELECT reserved, version FROM inventory_balances WHERE id = ?", sku.balanceId());
+        assertThat((BigDecimal) balance.get("reserved")).isEqualByComparingTo("20");
+        assertThat(jdbc.queryForList("""
+                SELECT fencing_token FROM inventory_reservations WHERE inventory_balance_id = ? ORDER BY fencing_token
+                """, Long.class, sku.balanceId())).containsExactly(1L, 2L, 3L, 4L);
+        assertThat(balance.get("version")).isEqualTo(4L);
+    }
+
     private List<OrderResponse> submitConcurrently(List<String> keys, List<CreateOrderRequest> requests)
             throws Exception {
         CountDownLatch start = new CountDownLatch(1);
