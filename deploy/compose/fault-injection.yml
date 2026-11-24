@@ -1,0 +1,8 @@
+# Process-kill drill overlay (tests/failure/process-kill-recovery.py, windows 2 and 4).
+# Activates erp-core's fault-injection profile, whose consumer crash-window gate can hold
+# an armed record between its side effect and the Kafka offset commit. Combine only with
+# qualification.yml on a disposable project; never with a shared deployment.
+services:
+  erp-core:
+    environment:
+      SPRING_PROFILES_ACTIVE: fault-injection

@@ -1,0 +1,25 @@
+name: fault-matrix
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  drill-logic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Process-kill drill unit tests
+        run: python3 -m unittest discover -s tests/failure -p 'test_*.py'
+      - name: Drill CLI loads without a stack
+        run: python3 tests/failure/process-kill-recovery.py --help
+      - name: Fault-injection Compose overlay validates
+        run: >-
+          docker compose --env-file deploy/compose/qualification.env
+          -f deploy/compose/compose.yml -f deploy/compose/qualification.yml
+          -f deploy/compose/fault-injection.yml config --quiet

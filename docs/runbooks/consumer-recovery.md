@@ -57,7 +57,7 @@ The locked-table case exceeds the old retry budget, then releases the lock.
 The missing-DLQ case stops/recreates the consumer object with the same group,
 provisions the DLQ and observes replay. This is a consumer restart, not a JVM kill.
 
-The separate [runtime qualification drill](runtime-qualification.md) uses actual
-SIGKILL on the deployed Core before Inbox commit, then checks retained offset,
-restart and duplicate delivery. It does not cover a kill after Inbox commit but
-before source offset commit, or after DLQ ACK before source offset commit.
+The separate [process-kill fault matrix](../../tests/failure/README.md) uses actual
+SIGKILL on the deployed Core before Inbox commit, after Inbox commit but before the
+source offset commit, and after DLQ ACK but before the source offset commit, then
+checks retained offsets, restart, Inbox absorption and DLQ duplication.
