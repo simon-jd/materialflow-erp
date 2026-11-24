@@ -1,6 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { UserManager } from "oidc-client-ts";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AuthProvider, useAuth, useAutoSignin } from "react-oidc-context";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
@@ -35,12 +35,14 @@ function SignedIn({ config, userManager }: { config: RuntimeConfig; userManager:
   const { isLoading, isAuthenticated, error } = useAutoSignin({
     signinArgs: { state: { returnTo: `${window.location.pathname}${window.location.search}` } },
   });
+  const signIn = useCallback(() => void auth.signinRedirect(), [auth]);
+  const signOut = useCallback(() => void auth.signoutRedirect(), [auth]);
 
   if (error) {
     return (
       <StatusScreen title="Sign-in failed">
         <p>{error.message}</p>
-        <Button onClick={() => void auth.signinRedirect()}>Try again</Button>
+        <Button onClick={signIn}>Try again</Button>
       </StatusScreen>
     );
   }
@@ -52,8 +54,8 @@ function SignedIn({ config, userManager }: { config: RuntimeConfig; userManager:
       config={config}
       userManager={userManager}
       claims={auth.user.profile}
-      signIn={() => void auth.signinRedirect()}
-      signOut={() => void auth.signoutRedirect()}
+      signIn={signIn}
+      signOut={signOut}
     />
   );
 }
