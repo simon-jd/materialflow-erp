@@ -1,7 +1,7 @@
 name: terraform
 
-# Static checks for deploy/terraform. Nothing here needs AWS credentials: init skips the backend,
-# `terraform test` uses mocked providers and tflint's deep (API) checks are off.
+# Static checks for deploy/terraform (aws and azure). Nothing here needs cloud credentials: init
+# skips the backend, `terraform test` uses mocked providers and tflint's deep (API) checks are off.
 
 on:
   pull_request:
@@ -24,12 +24,16 @@ env:
 
 jobs:
   validate:
-    name: fmt, validate, test, tflint
+    name: fmt, validate, test, tflint (${{ matrix.stack }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [aws, azure]
     defaults:
       run:
-        working-directory: deploy/terraform/aws
+        working-directory: deploy/terraform/${{ matrix.stack }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,15 +49,16 @@ jobs:
       - name: Validate
         run: terraform validate
       - name: Offline tests (mocked providers)
+        if: hashFiles(format('deploy/terraform/{0}/tests/*.tftest.hcl', matrix.stack)) != ''
         run: terraform test
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.tflint.d/plugins
-          key: tflint-${{ hashFiles('deploy/terraform/aws/.tflint.hcl') }}
+          key: tflint-${{ matrix.stack }}-${{ hashFiles(format('deploy/terraform/{0}/.tflint.hcl', matrix.stack)) }}
       - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
-      - name: Lint (terraform + AWS rulesets)
+      - name: Lint (terraform + provider rulesets)
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -61,9 +66,13 @@ jobs:
           tflint --recursive --config "$PWD/.tflint.hcl" --format compact
 
   scan:
-    name: Trivy IaC scan
+    name: Trivy IaC scan (${{ matrix.stack }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [aws, azure]
     permissions:
       actions: read
       contents: read
@@ -78,19 +87,19 @@ jobs:
         with:
           version: ${{ env.TRIVY_VERSION }}
           scan-type: config
-          scan-ref: deploy/terraform/aws
-          skip-dirs: deploy/terraform/aws/.terraform
+          scan-ref: deploy/terraform/${{ matrix.stack }}
+          skip-dirs: deploy/terraform/${{ matrix.stack }}/.terraform
           format: sarif
-          output: trivy-iac.sarif
+          output: trivy-iac-${{ matrix.stack }}.sarif
           exit-code: '1'
       - name: Preserve scan evidence
-        if: always() && hashFiles('trivy-iac.sarif') != ''
+        if: always() && hashFiles(format('trivy-iac-{0}.sarif', matrix.stack)) != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: trivy-iac
-          path: trivy-iac.sarif
+          name: trivy-iac-${{ matrix.stack }}
+          path: trivy-iac-${{ matrix.stack }}.sarif
       - uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
-        if: always() && hashFiles('trivy-iac.sarif') != '' && (!github.event.repository.private || vars.CODE_SCANNING_ENABLED == 'true')
+        if: always() && hashFiles(format('trivy-iac-{0}.sarif', matrix.stack)) != '' && (!github.event.repository.private || vars.CODE_SCANNING_ENABLED == 'true')
         with:
-          sarif_file: trivy-iac.sarif
-          category: trivy-iac
+          sarif_file: trivy-iac-${{ matrix.stack }}.sarif
+          category: trivy-iac-${{ matrix.stack }}

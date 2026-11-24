@@ -1,0 +1,21 @@
+# Optional: keep the state in an Azure Storage account instead of the operator's machine.
+#
+# 1. Create the account once, outside this configuration, so `terraform destroy` never deletes
+#    its own state (names are examples; the account name must be globally unique):
+#      az group create -n rg-materialflow-tfstate -l westus --subscription <subscription-id> \
+#        --tags project=materialflow-erp
+#      az storage account create -n mftfstate<suffix> -g rg-materialflow-tfstate -l westus \
+#        --sku Standard_LRS --min-tls-version TLS1_2 --allow-blob-public-access false \
+#        --subscription <subscription-id> --tags project=materialflow-erp
+#      az storage container create -n tfstate --account-name mftfstate<suffix> --auth-mode login
+#    and grant yourself "Storage Blob Data Contributor" on the account.
+# 2. In versions.tf, change `backend "local" {}` to `backend "azurerm" {}`.
+# 3. Copy this file to backend.hcl (git-ignored), uncomment the values and migrate:
+#      terraform init -migrate-state -backend-config=backend.hcl
+#
+# subscription_id      = "<subscription-id>"
+# resource_group_name  = "rg-materialflow-tfstate"
+# storage_account_name = "mftfstate<suffix>"
+# container_name       = "tfstate"
+# key                  = "azure/dev/terraform.tfstate"
+# use_azuread_auth     = true   # Entra ID instead of storage account keys; blob leases lock the state
