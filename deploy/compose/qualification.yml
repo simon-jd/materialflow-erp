@@ -68,3 +68,11 @@ services:
     ports: !override
       - "127.0.0.1:${MATERIALFLOW_INTEGRATION_PORT:-28083}:8083"
       - "127.0.0.1:${MATERIALFLOW_GRPC_PORT:-29090}:9090"
+  admin-console:
+    build: !reset null
+    image: materialflow-qualification/admin-console:${QUALIFICATION_TAG:-boot4}
+    restart: "no"
+    mem_limit: 256m
+    cpus: 0.5
+    ports: !override
+      - "127.0.0.1:${MATERIALFLOW_ADMIN_CONSOLE_PORT:-28088}:8080"
