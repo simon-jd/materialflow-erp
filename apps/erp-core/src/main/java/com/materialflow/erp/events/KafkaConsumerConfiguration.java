@@ -6,7 +6,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.listener.ConsumerAwareRecordRecoverer;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ContainerProperties;
@@ -19,11 +22,29 @@ import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 @ConditionalOnProperty(name = "materialflow.kafka.consumer.enabled", havingValue = "true")
 public class KafkaConsumerConfiguration {
     @Bean
-    DefaultErrorHandler domainEventErrorHandler(KafkaTemplate<Object, Object> kafka, MeterRegistry meters) {
-        var recoverer = new DeadLetterPublishingRecoverer(kafka,
+    @Profile("!" + ConsumerCrashWindowGate.PROFILE)
+    ConsumerCrashWindowGate consumerCrashWindowGate() {
+        return ConsumerCrashWindowGate.NONE;
+    }
+
+    @Bean
+    @Profile(ConsumerCrashWindowGate.PROFILE)
+    ConsumerCrashWindowGate faultInjectionCrashWindowGate(JdbcTemplate jdbc) {
+        return new AdvisoryLockCrashWindowGate(jdbc);
+    }
+
+    @Bean
+    DefaultErrorHandler domainEventErrorHandler(KafkaTemplate<Object, Object> kafka, MeterRegistry meters,
+            ConsumerCrashWindowGate crashWindowGate) {
+        var deadLetters = new DeadLetterPublishingRecoverer(kafka,
                 (record, exception) -> new TopicPartition(record.topic() + ".DLQ", record.partition()));
         // Also the pre-migration default; make the offset safety contract explicit.
-        recoverer.setFailIfSendResultIsError(true);
+        deadLetters.setFailIfSendResultIsError(true);
+        // Consumer-aware, so the dead-letter publisher still receives the consumer (group header).
+        ConsumerAwareRecordRecoverer recoverer = (record, consumer, exception) -> {
+            deadLetters.accept(record, consumer, exception);
+            crashWindowGate.enter(ConsumerCrashWindowGate.Window.AFTER_DEAD_LETTER_SEND, record);
+        };
         var backoff = new ExponentialBackOffWithMaxRetries(4);
         backoff.setInitialInterval(500);
         backoff.setMultiplier(2);
