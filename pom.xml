@@ -60,11 +60,25 @@
         <checkstyle.version>3.6.0</checkstyle.version>
         <spotbugs.version>4.9.8.1</spotbugs.version>
         <jmh.version>1.37</jmh.version>
+        <!-- Kafka clients bring these compression codecs transitively; pin the patched releases
+             (lz4-java CVE-2026-106451, snappy-java CVE-2026-93451 and CVE-2026-108106). -->
+        <lz4-java.version>1.11.4</lz4-java.version>
+        <snappy-java.version>1.1.10.9</snappy-java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>at.yawk.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>${lz4-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
                 <artifactId>resilience4j-bom</artifactId>
