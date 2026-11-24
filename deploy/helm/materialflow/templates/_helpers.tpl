@@ -18,12 +18,16 @@ tolerations:
 {{- if $global.spreadAcrossNodes }}
 # Two replicas of a component prefer different nodes, so one node drain or VM failure does not
 # take a whole component down. "ScheduleAnyway" keeps a single-node cluster schedulable.
+# matchLabelKeys counts only pods of the same ReplicaSet: without it the old pods still running
+# during a rolling update skew the count, and both new replicas could land on one node (seen on
+# AKS after rollout restarts, which then blocked a node drain on the PDB).
 topologySpreadConstraints:
   - maxSkew: 1
     topologyKey: kubernetes.io/hostname
     whenUnsatisfiable: ScheduleAnyway
     labelSelector:
       matchLabels: {app.kubernetes.io/name: {{ .name }}}
+    matchLabelKeys: [pod-template-hash]
 {{- end }}
 {{- end }}
 

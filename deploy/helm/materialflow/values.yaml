@@ -68,6 +68,13 @@ components:
     port: 8081
     replicas: 2
     autoscaling: {enabled: true, minReplicas: 2, maxReplicas: 8, cpu: 65}
+    env:
+      # Retire pooled upstream connections after 5 s. A pooled keep-alive connection stays bound to
+      # the pod it was opened to after that pod leaves the Service, and a request sent on it just as
+      # the pod's graceful shutdown closes it fails with PrematureCloseException (HTTP 500). Keep this
+      # well below global.preStopSleepSeconds (10 s on AKS), so no pooled connection to a
+      # terminating pod is left when it receives SIGTERM (docs/evidence/azure-2026-11-24-zero-downtime).
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_HTTPCLIENT_POOL_MAXLIFETIME: 5s
     resources:
       requests: {cpu: 100m, memory: 256Mi}
       limits: {cpu: "1", memory: 512Mi}
