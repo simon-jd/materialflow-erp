@@ -1,0 +1,55 @@
+name: admin-console-e2e
+
+# Full-stack browser test: Keycloak login, order creation, maker-checker approval and the read-only
+# role against PostgreSQL, Kafka, erp-core, the gateway and the console image. Manual, because it
+# builds the backend and starts eight containers.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {distribution: temurin, java-version: '21', cache: maven}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/admin-console/package-lock.json
+      - name: Package the backend JARs
+        run: mvn -B -ntp -DskipTests package
+      - name: Install console dependencies and Chromium
+        working-directory: apps/admin-console
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Start the stack
+        run: apps/admin-console/e2e/stack.sh up
+      - name: Run Playwright
+        working-directory: apps/admin-console
+        env:
+          E2E_BASE_URL: http://localhost:28088
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-console-e2e-report
+          path: |
+            apps/admin-console/playwright-report
+            apps/admin-console/test-results
+          if-no-files-found: ignore
+      - name: Stack logs
+        if: failure()
+        run: >-
+          docker compose -p materialflow-console-e2e --env-file deploy/compose/qualification.env --profile console
+          -f deploy/compose/compose.yml -f deploy/compose/qualification.yml logs --no-color --tail 300
+      - name: Stop the stack
+        if: always()
+        run: apps/admin-console/e2e/stack.sh down
