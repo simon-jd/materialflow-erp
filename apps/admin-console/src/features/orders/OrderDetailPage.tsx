@@ -21,16 +21,24 @@ import { useOrder } from "./order-queries";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const NOT_ALLOCATING: ReadonlySet<Schemas["OrderStatus"]> = new Set(["REJECTED", "CANCELLED", "EXPIRED"]);
+
 function allocationState(
   order: Schemas["Order"],
   line: Schemas["OrderLine"],
 ): { label: string; variant: BadgeVariant } {
-  if (order.status === "PENDING_APPROVAL") return { label: "Awaiting approval", variant: "secondary" };
-  if (order.status === "REJECTED" || order.status === "CANCELLED")
+  if (order.status === "PENDING_APPROVAL") {
+    return { label: "Awaiting approval", variant: "secondary" };
+  }
+  if (NOT_ALLOCATING.has(order.status)) {
     return { label: "Not allocated", variant: "secondary" };
-  if (line.allocatedQuantity >= line.orderedQuantity) return { label: "Allocated", variant: "success" };
-  if (line.allocatedQuantity > 0) return { label: "Partially backordered", variant: "warning" };
-  return { label: "Backordered", variant: "warning" };
+  }
+  if (line.allocatedQuantity >= line.orderedQuantity) {
+    return { label: "Allocated", variant: "success" };
+  }
+  return line.allocatedQuantity > 0
+    ? { label: "Partially backordered", variant: "warning" }
+    : { label: "Backordered", variant: "warning" };
 }
 
 export function OrderDetailPage() {
