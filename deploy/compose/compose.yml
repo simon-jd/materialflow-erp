@@ -208,10 +208,29 @@ services:
       OIDC_ISSUER_URI: http://localhost:${MATERIALFLOW_KEYCLOAK_PORT:-8180}/realms/materialflow
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/materialflow/protocol/openid-connect/certs
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+      # The admin console's Vite dev server calls the gateway cross-origin; the container does not.
+      MATERIALFLOW_CORS_ALLOWED_ORIGINS: ${MATERIALFLOW_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
     ports: ["${MATERIALFLOW_GATEWAY_PORT:-8081}:8081"]
     depends_on:
       redis: {condition: service_healthy}
       erp-core: {condition: service_started}
+
+  # Opt in with `--profile console`; it needs MATERIALFLOW_SECURITY_ENABLED=true (OIDC sign-in).
+  admin-console:
+    <<: *app-defaults
+    profiles: [console]
+    build:
+      context: ../../apps/admin-console
+    environment:
+      # Same origin: nginx proxies /api/ to the gateway, like CloudFront does in AWS.
+      API_BASE_URL: ""
+      API_UPSTREAM: http://edge-gateway:8081
+      OIDC_AUTHORITY: http://localhost:${MATERIALFLOW_KEYCLOAK_PORT:-8180}/realms/materialflow
+      OIDC_CLIENT_ID: materialflow-admin-console
+    ports: ["${MATERIALFLOW_ADMIN_CONSOLE_PORT:-8088}:8080"]
+    depends_on:
+      edge-gateway: {condition: service_started}
+      keycloak: {condition: service_started}
 
 volumes:
   postgres-data:

@@ -31,7 +31,7 @@ spring:
             - id: erp-core
               uri: ${ERP_CORE_URI:http://localhost:8080}
               predicates:
-                - Path=/api/v1/orders/**,/api/v1/approvals/**,/api/v1/shipments/**,/api/v1/invoices/**,/api/v1/payment-files/**,/api/v1/procurement/**
+                - Path=/api/v1/orders/**,/api/v1/approvals/**,/api/v1/shipments/**,/api/v1/invoices/**,/api/v1/payment-files/**,/api/v1/procurement/**,/api/v1/inventory/**,/api/v1/customers/**,/api/v1/materials/**,/api/v1/warehouses/**
             - id: projection
               uri: ${PROJECTION_URI:http://localhost:8082}
               predicates:
@@ -61,6 +61,10 @@ management:
 materialflow:
   security:
     enabled: ${MATERIALFLOW_SECURITY_ENABLED:false}
+  gateway:
+    cors:
+      # Comma-separated exact origins (no wildcards), e.g. the admin console's Vite dev server.
+      allowed-origins: ${MATERIALFLOW_CORS_ALLOWED_ORIGINS:}
 logging:
   structured:
     format:

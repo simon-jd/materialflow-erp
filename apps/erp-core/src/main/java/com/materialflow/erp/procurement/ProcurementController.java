@@ -28,8 +28,8 @@ public class ProcurementController {
     @ResponseStatus(HttpStatus.CREATED)
     public PurchaseRequestResponse create(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestHeader("X-Organization-Id") String organization,
-            @RequestHeader("X-Actor-Id") String actor,
+            @RequestHeader(value = "X-Organization-Id", required = false) String organization,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actor,
             @RequestHeader(value = "X-Roles", required = false) String roles,
             @RequestHeader(value = "X-Warehouse-Scope", required = false) String warehouses,
             Authentication authentication,
@@ -42,8 +42,8 @@ public class ProcurementController {
     public PurchaseRequestResponse approve(
             @PathVariable UUID requestId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestHeader("X-Organization-Id") String organization,
-            @RequestHeader("X-Actor-Id") String actor,
+            @RequestHeader(value = "X-Organization-Id", required = false) String organization,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actor,
             @RequestHeader(value = "X-Roles", required = false) String roles,
             @RequestHeader(value = "X-Warehouse-Scope", required = false) String warehouses,
             Authentication authentication) {
@@ -56,8 +56,8 @@ public class ProcurementController {
     public PurchaseReceiptResponse receive(
             @PathVariable UUID purchaseOrderId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestHeader("X-Organization-Id") String organization,
-            @RequestHeader("X-Actor-Id") String actor,
+            @RequestHeader(value = "X-Organization-Id", required = false) String organization,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actor,
             @RequestHeader(value = "X-Roles", required = false) String roles,
             @RequestHeader(value = "X-Warehouse-Scope", required = false) String warehouses,
             Authentication authentication,

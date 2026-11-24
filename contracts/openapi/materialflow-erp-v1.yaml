@@ -21,8 +21,33 @@ tags:
     description: Shipment invoicing, synthetic payment files and reconciliation.
   - name: Procurement
     description: Purchase requests, approvals, orders and receipts.
+  - name: Inventory
+    description: Read-only stock positions within the caller's warehouse scope.
+  - name: Master data
+    description: Active, tenant-scoped reference data for pickers and display names.
 paths:
   /api/v1/orders:
+    get:
+      summary: List the caller's organization's sales orders
+      description: >-
+        Newest first, with the order id as tie-breaker so pages are stable under concurrent inserts.
+        The organization always comes from the token, never from a request header.
+      tags: [Orders]
+      operationId: listOrders
+      parameters:
+        - {name: status, in: query, required: false, schema: {$ref: '#/components/schemas/OrderStatus'}}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of order summaries.
+          content: {application/json: {schema: {$ref: '#/components/schemas/OrderPage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
     post:
       summary: Submit a sales order
       tags: [Orders]
@@ -43,6 +68,9 @@ paths:
           description: Created, reserved, backordered, or pending approval.
           content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}
         '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Problem'}
+        '404': {$ref: '#/components/responses/Problem'}
         '409': {$ref: '#/components/responses/Problem'}
   /api/v1/orders/{orderId}:
     get:
@@ -57,6 +85,7 @@ paths:
         - $ref: '#/components/parameters/WarehouseScope'
       responses:
         '200': {description: Authoritative order, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
         '404': {$ref: '#/components/responses/Problem'}
   /api/v1/orders/{orderId}/cancel:
     post:
@@ -82,6 +111,45 @@ paths:
       responses:
         '200': {description: Order cancelled and outstanding credit and inventory released, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}
         '409': {$ref: '#/components/responses/Problem'}
+  /api/v1/approvals:
+    get:
+      summary: List sales-order approval instances
+      description: >-
+        Newest first. `decidableByActor` tells a UI whether to offer approve/reject to the caller; the
+        decision endpoint still enforces role, frozen approver set and maker-checker itself.
+      tags: [Approvals]
+      operationId: listApprovals
+      parameters:
+        - {name: status, in: query, required: false, schema: {$ref: '#/components/schemas/ApprovalStatus'}}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of approval summaries.
+          content: {application/json: {schema: {$ref: '#/components/schemas/ApprovalPage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/v1/approvals/{approvalId}:
+    get:
+      summary: Read a sales-order approval instance and its decisions
+      tags: [Approvals]
+      operationId: getApproval
+      parameters:
+        - $ref: '#/components/parameters/ApprovalId'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: Approval state and decision history.
+          content: {application/json: {schema: {$ref: '#/components/schemas/ApprovalDetail'}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/Problem'}
   /api/v1/approvals/{approvalId}/decisions:
     post:
       summary: Record a maker-checker approval decision
@@ -103,9 +171,13 @@ paths:
               required: [decision]
               properties:
                 decision: {type: string, enum: [APPROVE, REJECT]}
-                reason: {type: string, maxLength: 500}
+                reason: {type: string, maxLength: 500, description: Required when rejecting.}
       responses:
-        '200': {description: Decision result, content: {application/json: {schema: {type: object}}}}
+        '200': {description: Decision result, content: {application/json: {schema: {$ref: '#/components/schemas/ApprovalDecisionResult'}}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Problem'}
+        '404': {$ref: '#/components/responses/Problem'}
         '409': {$ref: '#/components/responses/Problem'}
   /api/v1/orders/{orderId}/shipments:
     post:
@@ -241,23 +313,122 @@ paths:
       responses:
         '201': {description: Partial or complete receipt, content: {application/json: {schema: {type: object}}}}
         '409': {$ref: '#/components/responses/Problem'}
+  /api/v1/inventory/availability:
+    get:
+      summary: List stock positions within the caller's warehouse scope
+      description: >-
+        Point-in-time and lock-free; the authoritative availability check happens when an order reserves.
+        Filtering by a warehouse outside the caller's scope is rejected with 403.
+      tags: [Inventory]
+      operationId: listInventoryAvailability
+      parameters:
+        - {name: warehouseId, in: query, required: false, schema: {type: string, format: uuid}}
+        - {name: materialId, in: query, required: false, schema: {type: string, format: uuid}}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of stock positions ordered by warehouse code, SKU and location.
+          content: {application/json: {schema: {$ref: '#/components/schemas/InventoryAvailabilityPage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Problem'}
+  /api/v1/customers:
+    get:
+      summary: List active customers
+      tags: [Master data]
+      operationId: listCustomers
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of customers ordered by code.
+          content: {application/json: {schema: {$ref: '#/components/schemas/CustomerPage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/v1/materials:
+    get:
+      summary: List active materials
+      tags: [Master data]
+      operationId: listMaterials
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of materials ordered by SKU.
+          content: {application/json: {schema: {$ref: '#/components/schemas/MaterialPage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/v1/warehouses:
+    get:
+      summary: List active warehouses within the caller's warehouse scope
+      tags: [Master data]
+      operationId: listWarehouses
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/OrganizationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/Roles'
+        - $ref: '#/components/parameters/WarehouseScope'
+      responses:
+        '200':
+          description: One page of warehouses ordered by code.
+          content: {application/json: {schema: {$ref: '#/components/schemas/WarehousePage'}}}
+        '400': {$ref: '#/components/responses/Problem'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
 components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
   parameters:
     IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 1, maxLength: 160}}
-    OrganizationId: {name: X-Organization-Id, in: header, required: true, schema: {type: string, format: uuid}}
-    ActorId: {name: X-Actor-Id, in: header, required: true, schema: {type: string, format: uuid}}
+    OrganizationId:
+      name: X-Organization-Id
+      in: header
+      required: false
+      schema: {type: string, format: uuid}
+      description: >-
+        Required in local-only mode. Ignored when JWT security is enabled; the token's organization_id
+        claim is used instead, so clients should not send it.
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: false
+      schema: {type: string, format: uuid}
+      description: >-
+        Required in local-only mode. Ignored when JWT security is enabled; the token's user_id claim is
+        used instead, so clients should not send it.
     Roles: {name: X-Roles, in: header, required: false, schema: {type: string}, description: Local-only mode; ignored when JWT security is enabled.}
     WarehouseScope: {name: X-Warehouse-Scope, in: header, required: false, schema: {type: string}, description: Comma-separated UUIDs.}
     OrderId: {name: orderId, in: path, required: true, schema: {type: string, format: uuid}}
     ApprovalId: {name: approvalId, in: path, required: true, schema: {type: string, format: uuid}}
+    Page: {name: page, in: query, required: false, schema: {type: integer, minimum: 0, default: 0}, description: Zero-based page index.}
+    Size: {name: size, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+    Search: {name: q, in: query, required: false, schema: {type: string, maxLength: 80}, description: Case-insensitive match on code/SKU or name.}
   responses:
     Problem:
       description: Stable safe error response.
       content:
         application/json:
           schema: {$ref: '#/components/schemas/ApiError'}
+    Unauthorized:
+      description: Missing, expired or invalid bearer token (JWT mode). No response body.
   schemas:
     PositiveQuantity: {type: number, exclusiveMinimum: 0, multipleOf: 0.000001}
     Money: {type: number, minimum: 0, multipleOf: 0.01}
@@ -282,6 +453,11 @@ components:
               manualUnitPrice: {$ref: '#/components/schemas/Money'}
               manualDiscountRate: {type: number, minimum: 0, maximum: 1}
               overrideReason: {type: string, maxLength: 500}
+    OrderStatus:
+      type: string
+      enum: [DRAFT, SUBMITTED, PENDING_APPROVAL, APPROVED, RESERVED, PARTIALLY_ALLOCATED, BACKORDERED,
+             PARTIALLY_FULFILLED, FULFILLED, INVOICED, SETTLED, REJECTED, CANCELLED, EXPIRED,
+             RECONCILIATION_EXCEPTION]
     Order:
       type: object
       required: [id, orderNumber, customerId, status, totalAmount, version, lines]
@@ -289,11 +465,188 @@ components:
         id: {type: string, format: uuid}
         orderNumber: {type: string}
         customerId: {type: string, format: uuid}
-        status: {type: string}
+        status: {$ref: '#/components/schemas/OrderStatus'}
         totalAmount: {$ref: '#/components/schemas/Money'}
         approvalInstanceId: {type: [string, 'null'], format: uuid}
         version: {type: integer, minimum: 0}
-        lines: {type: array, items: {type: object}}
+        lines: {type: array, items: {$ref: '#/components/schemas/OrderLine'}}
+    OrderLine:
+      type: object
+      description: Ordered minus allocated quantity is backordered.
+      required: [id, lineNumber, materialId, warehouseId, locationId, orderedQuantity, allocatedQuantity,
+                 fulfilledQuantity, invoicedQuantity, unitPrice, discountRate, netAmount, priceSource,
+                 priceRuleVersion]
+      properties:
+        id: {type: string, format: uuid}
+        lineNumber: {type: integer, minimum: 1}
+        materialId: {type: string, format: uuid}
+        warehouseId: {type: string, format: uuid}
+        locationId: {type: string, format: uuid}
+        orderedQuantity: {type: number}
+        allocatedQuantity: {type: number}
+        fulfilledQuantity: {type: number}
+        invoicedQuantity: {type: number}
+        unitPrice: {type: number}
+        discountRate: {type: number}
+        netAmount: {type: number}
+        priceSource: {type: string}
+        priceRuleVersion: {type: integer}
+    PageMetadata:
+      type: object
+      required: [page, size, totalItems, totalPages]
+      properties:
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1, maximum: 100}
+        totalItems: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
+    OrderSummary:
+      type: object
+      required: [id, orderNumber, customerId, customerName, status, totalAmount, currency, createdAt, version]
+      properties:
+        id: {type: string, format: uuid}
+        orderNumber: {type: string}
+        customerId: {type: string, format: uuid}
+        customerName: {type: string}
+        status: {$ref: '#/components/schemas/OrderStatus'}
+        totalAmount: {$ref: '#/components/schemas/Money'}
+        currency: {type: string, minLength: 3, maxLength: 3}
+        approvalInstanceId: {type: [string, 'null'], format: uuid}
+        createdAt: {type: string, format: date-time}
+        version: {type: integer, minimum: 0}
+    OrderPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/OrderSummary'}}
+    ApprovalStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED, WITHDRAWN, EXPIRED]
+    ApprovalSummary:
+      type: object
+      required: [approvalId, orderId, orderNumber, customerName, totalAmount, applicantId, status, mode,
+                 requiredApprovals, approvedCount, createdAt, version, decidableByActor]
+      properties:
+        approvalId: {type: string, format: uuid}
+        orderId: {type: string, format: uuid}
+        orderNumber: {type: string}
+        customerName: {type: string}
+        totalAmount: {$ref: '#/components/schemas/Money'}
+        applicantId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ApprovalStatus'}
+        mode: {type: string, enum: [ANY, ALL, N_OF_M]}
+        requiredApprovals: {type: integer, minimum: 1}
+        approvedCount: {type: integer, minimum: 0}
+        createdAt: {type: string, format: date-time}
+        version: {type: integer, minimum: 0}
+        decidableByActor:
+          type: boolean
+          description: >-
+            True when the approval is pending, the caller holds APPROVAL_DECIDE, is in the frozen approver set,
+            is not the applicant and has not decided yet. A UI hint; the decision endpoint re-checks all of it.
+    ApprovalPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/ApprovalSummary'}}
+    ApprovalDetail:
+      type: object
+      required: [approval, decisions]
+      properties:
+        approval: {$ref: '#/components/schemas/ApprovalSummary'}
+        decisions:
+          type: array
+          items:
+            type: object
+            required: [approverId, decision, decidedAt]
+            properties:
+              approverId: {type: string, format: uuid}
+              decision: {type: string, enum: [APPROVE, REJECT]}
+              reason: {type: [string, 'null']}
+              decidedAt: {type: string, format: date-time}
+    ApprovalDecisionResult:
+      type: object
+      required: [approvalId, objectId, status, approvedCount, version]
+      properties:
+        approvalId: {type: string, format: uuid}
+        objectId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ApprovalStatus'}
+        approvedCount: {type: integer, minimum: 0}
+        version: {type: integer, minimum: 0}
+    InventoryAvailability:
+      type: object
+      required: [warehouseId, warehouseCode, warehouseName, materialId, sku, materialName, baseUnit, locationId,
+                 onHand, reserved, available, inTransit, updatedAt]
+      properties:
+        warehouseId: {type: string, format: uuid}
+        warehouseCode: {type: string}
+        warehouseName: {type: string}
+        materialId: {type: string, format: uuid}
+        sku: {type: string}
+        materialName: {type: string}
+        baseUnit: {type: string}
+        locationId: {type: string, format: uuid}
+        onHand: {type: number, minimum: 0}
+        reserved: {type: number, minimum: 0}
+        available: {type: number, minimum: 0, description: On hand minus reserved.}
+        inTransit: {type: number, minimum: 0}
+        updatedAt: {type: string, format: date-time}
+    InventoryAvailabilityPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/InventoryAvailability'}}
+    Customer:
+      type: object
+      required: [id, code, name, regionCode]
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        name: {type: string}
+        regionCode: {type: string}
+    CustomerPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/Customer'}}
+    Material:
+      type: object
+      required: [id, sku, name, baseUnit]
+      properties:
+        id: {type: string, format: uuid}
+        sku: {type: string}
+        name: {type: string}
+        specification: {type: [string, 'null']}
+        baseUnit: {type: string}
+    MaterialPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/Material'}}
+    Warehouse:
+      type: object
+      required: [id, code, name, regionCode]
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        name: {type: string}
+        regionCode: {type: string}
+    WarehousePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required: [items]
+          properties:
+            items: {type: array, items: {$ref: '#/components/schemas/Warehouse'}}
     PaymentFile:
       type: object
       required: [fileName, records]

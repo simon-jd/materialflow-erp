@@ -27,8 +27,8 @@ public class BillingController {
     public InvoiceResponse createInvoice(
             @PathVariable UUID orderId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestHeader("X-Organization-Id") String organization,
-            @RequestHeader("X-Actor-Id") String actor,
+            @RequestHeader(value = "X-Organization-Id", required = false) String organization,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actor,
             @RequestHeader(value = "X-Roles", required = false) String roles,
             @RequestHeader(value = "X-Warehouse-Scope", required = false) String warehouses,
             Authentication authentication) {

@@ -1,0 +1,81 @@
+{{- if .Values.adminConsole.enabled }}
+{{- $console := .Values.adminConsole }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: materialflow-admin-console
+  labels:
+    {{- include "materialflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: materialflow-admin-console
+spec:
+  replicas: {{ $console.replicas }}
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app.kubernetes.io/name: materialflow-admin-console}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: materialflow-admin-console
+        app.kubernetes.io/part-of: materialflow
+    spec:
+      serviceAccountName: materialflow
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: admin-console
+          image: "{{ .Values.global.imageRegistry }}/admin-console:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - {name: http, containerPort: {{ $console.port }}}
+          env:
+            - {name: OIDC_AUTHORITY, value: {{ required "adminConsole.oidcAuthority is required when adminConsole.enabled" $console.oidcAuthority | quote }}}
+            - {name: OIDC_CLIENT_ID, value: {{ $console.oidcClientId | quote }}}
+            - {name: API_BASE_URL, value: {{ $console.apiBaseUrl | quote }}}
+            - {name: API_UPSTREAM, value: {{ $console.apiUpstream | quote }}}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 20
+          resources:
+            {{- toYaml $console.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            # nginx temp files, pid and the generated /config.js live here.
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: materialflow-admin-console
+  labels:
+    {{- include "materialflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: materialflow-admin-console
+spec:
+  selector: {app.kubernetes.io/name: materialflow-admin-console}
+  ports:
+    - {name: http, port: {{ $console.port }}, targetPort: http}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: materialflow-admin-console
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: materialflow-admin-console}
+{{- end }}

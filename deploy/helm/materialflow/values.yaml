@@ -52,3 +52,18 @@ components:
     resources:
       requests: {cpu: 100m, memory: 256Mi}
       limits: {cpu: "1", memory: 512Mi}
+
+# Optional React admin console (nginx, non-root). Disabled by default. Serve it and the gateway on one
+# origin: either route /api at the ingress, or keep apiUpstream so nginx proxies /api/ in-cluster.
+adminConsole:
+  enabled: false
+  replicas: 2
+  port: 8080
+  apiBaseUrl: ""
+  apiUpstream: http://materialflow-edge-gateway:8081
+  # Browser-facing issuer URL, e.g. https://id.example.com/realms/materialflow (required when enabled).
+  oidcAuthority: ""
+  oidcClientId: materialflow-admin-console
+  resources:
+    requests: {cpu: 25m, memory: 32Mi}
+    limits: {cpu: 250m, memory: 128Mi}

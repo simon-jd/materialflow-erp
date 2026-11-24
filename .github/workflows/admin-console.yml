@@ -1,0 +1,67 @@
+name: admin-console
+
+on:
+  pull_request:
+    paths:
+      - apps/admin-console/**
+      - contracts/openapi/**
+      - .github/workflows/admin-console.yml
+  push:
+    branches: [main]
+    paths:
+      - apps/admin-console/**
+      - contracts/openapi/**
+      - .github/workflows/admin-console.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-console-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/admin-console
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/admin-console/package-lock.json
+      - run: npm ci
+      - name: Generated API client matches the OpenAPI contract
+        run: npm run check:api
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-console-coverage
+          path: apps/admin-console/coverage
+          if-no-files-found: ignore
+      - name: Build the container image
+        run: docker build -t materialflow/admin-console:ci .
+      - name: Smoke-test the image (read-only, non-root, runtime config, CSP)
+        run: |
+          docker run -d --name console --read-only --tmpfs /tmp -p 127.0.0.1:8088:8080 \
+            -e OIDC_AUTHORITY=https://id.example.test/realms/materialflow \
+            -e OIDC_CLIENT_ID=materialflow-admin-console materialflow/admin-console:ci
+          for _ in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8088/healthz && break; sleep 1; done
+          test "$(docker exec console id -u)" = 101
+          curl -fsS http://127.0.0.1:8088/config.js | grep -F '"oidcClientId":"materialflow-admin-console"'
+          curl -fsS -D - -o /dev/null http://127.0.0.1:8088/orders/new | tee headers.txt
+          grep -iF "content-security-policy: default-src 'self'; script-src 'self'" headers.txt
+          grep -iF "connect-src 'self' https://id.example.test" headers.txt
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8088/api/v1/orders)" = 404
+      - name: Container logs
+        if: failure()
+        run: docker logs console || true
