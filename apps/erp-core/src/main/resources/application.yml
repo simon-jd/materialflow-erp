@@ -102,6 +102,12 @@ materialflow:
       enabled: ${MATERIALFLOW_KAFKA_CONSUMER_ENABLED:false}
       topic: materialflow.domain-events.v1
       group-id: erp-core-reallocation-v1
+      # ADR 0011: detect a dead consumer in 10 s instead of Kafka's 45 s default.
+      failure-detection:
+        session-timeout: ${MATERIALFLOW_KAFKA_CONSUMER_SESSION_TIMEOUT:10s}
+        heartbeat-interval: ${MATERIALFLOW_KAFKA_CONSUMER_HEARTBEAT_INTERVAL:3s}
+        # Static membership only for a stable per-replica identity; see ADR 0011.
+        group-instance-id: ${MATERIALFLOW_KAFKA_CONSUMER_GROUP_INSTANCE_ID:}
 
 logging:
   structured:
