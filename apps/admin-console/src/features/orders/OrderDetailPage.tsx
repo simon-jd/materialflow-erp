@@ -219,7 +219,7 @@ function ApprovalCard({ approvalId, orderNumber }: { approvalId: string; orderNu
               </span>
             </div>
             {approval.data.decisions.length > 0 && (
-              <ul className="flex flex-col gap-1 text-sm">
+              <ul aria-label="Decisions" className="flex flex-col gap-1 text-sm">
                 {approval.data.decisions.map((decision) => (
                   <li key={`${decision.approverId}-${decision.decidedAt}`}>
                     {humanize(decision.decision)} by{" "}

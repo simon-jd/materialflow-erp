@@ -65,7 +65,8 @@ describe("OrderDetailPage", () => {
     expect(screen.getAllByText("Awaiting approval")).toHaveLength(2);
     await user.click(screen.getByRole("button", { name: "Approve" }));
 
-    expect(await screen.findByRole("listitem")).toHaveTextContent(/^Approve by 66666666 on /);
+    const decisions = await screen.findByRole("list", { name: "Decisions" });
+    expect(within(decisions).getByRole("listitem")).toHaveTextContent(/^Approve by 66666666 on /);
     expect(decision).toEqual({ decision: "APPROVE" });
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
   });

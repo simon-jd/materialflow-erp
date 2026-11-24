@@ -47,17 +47,19 @@ export function AppLayout() {
                 Organization {shortId(session.organizationId)}
               </span>
             </div>
-            <div className="hidden gap-1 md:flex" aria-label="Roles">
+            <ul className="hidden gap-1 md:flex" aria-label="Roles">
               {roles.length === 0 ? (
-                <Badge variant="outline">Read-only</Badge>
+                <li>
+                  <Badge variant="outline">Read-only</Badge>
+                </li>
               ) : (
                 roles.map((role) => (
-                  <Badge key={role} variant="outline">
-                    {role}
-                  </Badge>
+                  <li key={role}>
+                    <Badge variant="outline">{role}</Badge>
+                  </li>
                 ))
               )}
-            </div>
+            </ul>
             <Button variant="ghost" size="sm" onClick={session.signOut}>
               <LogOut aria-hidden />
               Sign out
