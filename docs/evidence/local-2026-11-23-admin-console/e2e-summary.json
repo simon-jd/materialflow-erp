@@ -1,0 +1,116 @@
+{
+  "label": "measured",
+  "scope": "local synthetic Docker; one run on a freshly created stack (down -v, up)",
+  "started_at": "2026-11-24T12:03:21.697Z",
+  "playwright": "1.65.1",
+  "browser": "Chromium (Chrome for Testing 159.0.8154.6, Playwright revision 1255), headless, 1440x900",
+  "base_url": "http://localhost:28088",
+  "totals": {
+    "passed": 4,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 1,
+    "wall_clock_ms": 8639
+  },
+  "tests": [
+    {
+      "spec": "admin-console.spec.ts",
+      "title": "a sales user creates an order and finds it in the list and the detail",
+      "outcome": "expected",
+      "duration_ms": 3810,
+      "attempts": 1
+    },
+    {
+      "spec": "admin-console.spec.ts",
+      "title": "a read-only user can browse but cannot create, and the API refuses as well",
+      "outcome": "expected",
+      "duration_ms": 752,
+      "attempts": 1
+    },
+    {
+      "spec": "admin-console.spec.ts",
+      "title": "an approver approves a large order that its maker cannot decide",
+      "outcome": "expected",
+      "duration_ms": 2334,
+      "attempts": 1
+    },
+    {
+      "spec": "admin-console.spec.ts",
+      "title": "every screen renders under the production CSP without console errors",
+      "outcome": "expected",
+      "duration_ms": 892,
+      "attempts": 1
+    },
+    {
+      "spec": "screenshots.spec.ts",
+      "title": "capture README screenshots",
+      "outcome": "skipped",
+      "duration_ms": 0,
+      "attempts": 1
+    }
+  ],
+  "stack": {
+    "compose_project": "mf-admin-console",
+    "image_tag": "admin-console",
+    "services": [
+      "postgres",
+      "redis",
+      "kafka",
+      "kafka-init",
+      "keycloak",
+      "erp-core",
+      "edge-gateway",
+      "admin-console"
+    ],
+    "startup_seconds_to_all_ready": 44,
+    "startup_note": "stack.sh up wall clock including cached image builds; earlier same-day fresh starts took 35-38 s"
+  },
+  "server_state_after_run": {
+    "orders": [
+      {
+        "status": "RESERVED",
+        "applicant": "66666666-...-601 (synthetic-sales)",
+        "total": 20.96,
+        "approval": null
+      },
+      {
+        "status": "PARTIALLY_ALLOCATED",
+        "applicant": "66666666-...-601 (synthetic-sales)",
+        "total": 31443.75,
+        "approval": "APPROVED",
+        "decisions": [
+          "66666666-...-602 (synthetic-demo): APPROVE"
+        ]
+      }
+    ],
+    "sales_order_idempotency_records": 2,
+    "inventory_after": {
+      "CEM-42-5": {
+        "on_hand": 1000,
+        "reserved": 1000,
+        "available": 0
+      },
+      "PLY-18-2440": {
+        "on_hand": 500,
+        "reserved": 0,
+        "available": 500
+      }
+    },
+    "console_proxy_api_status_counts": {
+      "GET 200": 27,
+      "GET 499 (client navigated away)": 3,
+      "POST 201": 2,
+      "POST 200": 1,
+      "POST 403": 1
+    }
+  },
+  "console_container": {
+    "user": "101",
+    "read_only_rootfs": true,
+    "no_new_privileges": true,
+    "memory_limit_mib": 256,
+    "memory_used_mib_after_run": 13.33,
+    "image_size_bytes": 91230262,
+    "nginx": "1.30.6"
+  }
+}

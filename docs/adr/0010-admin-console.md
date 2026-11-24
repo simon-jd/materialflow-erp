@@ -52,7 +52,10 @@ cross-origin API calls in any deployed environment. As a result there is no CORS
 non-simple request, no CORS policy to keep correct in production, and `connect-src` is just `'self'` plus
 the identity provider. The gateway's CORS support exists only for the Vite dev server: it is
 configured from properties, accepts only exact `scheme://host[:port]` origins (a wildcard fails
-startup), runs before authentication so preflights succeed, and never allows credentials.
+startup), runs before authentication so preflights succeed, and never allows credentials. A same-origin
+router must forward the browser's `Host`, or leave the allow-list empty: browsers send `Origin` on
+same-origin POSTs, and a rewritten `Host` makes the gateway treat them as cross-origin. The first
+full-stack e2e run caught exactly this, as an empty 403 on every POST through nginx.
 
 **Runtime configuration.** `index.html` loads `/config.js` before the bundle. The container generates
 it from `OIDC_AUTHORITY`, `OIDC_CLIENT_ID`, `API_BASE_URL` and `API_UPSTREAM` at start, together with

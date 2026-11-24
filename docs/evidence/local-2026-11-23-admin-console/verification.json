@@ -1,0 +1,27 @@
+{
+  "label": "measured",
+  "date": "2026-11-24 (America/Los_Angeles)",
+  "host": "Apple Silicon Mac, macOS 27.0.1, Docker Desktop engine 29.8.0 (12 CPUs / 12.5 GB shared by four agents)",
+  "toolchain": {
+    "java": "OpenJDK 21.0.13.1",
+    "maven": "3.9.16",
+    "node_local": "26.12.1 (CI pins 24)",
+    "npm": "11.20.0",
+    "playwright": "1.65.1",
+    "redocly_cli": "2.1.0",
+    "helm": "4.2.3 (alpine/helm image)"
+  },
+  "checks": [
+    {"command": "mvn -B -ntp -Pquality verify", "result": "BUILD SUCCESS", "tests": 73, "suites": 24, "failures": 0, "errors": 0, "skipped": 0, "checkstyle_violations": 0, "spotbugs_bug_instances": 0, "wall_clock": "2 min 51 s", "new_in_this_change": {"erp-core OperatorReadApiIntegrationTest": 5, "edge-gateway CorsPropertiesTest": 9, "edge-gateway GatewayCorsIntegrationTest": 3}},
+    {"command": "npm run check:api", "result": "Generated API client types are up to date."},
+    {"command": "npm run typecheck", "result": "passed (tsc -b, strict)"},
+    {"command": "npm run lint", "result": "passed (ESLint strict-type-checked, --max-warnings 0; Prettier)"},
+    {"command": "npm test", "result": "passed", "files": 10, "tests": 64, "coverage": {"statements": 85.68, "branches": 82.77, "functions": 82.51, "lines": 86.57}},
+    {"command": "npm run build", "result": "passed", "js_gzip_kb": {"react_chunk": 99.1, "vendor_chunk": 80.8, "app_chunk": 13.2}, "css_gzip_kb": 5.2},
+    {"command": "npx @redocly/cli@2.1.0 lint contracts/openapi/materialflow-erp-v1.yaml", "result": "valid; 1 pre-existing warning (localhost server URL)"},
+    {"command": "docker compose ... config --quiet (base, qualification overlay, overlay with --profile console)", "result": "passed"},
+    {"command": "helm lint deploy/helm/materialflow (default and adminConsole.enabled=true)", "result": "1 chart linted, 0 failed (both)"},
+    {"command": "docker run --read-only --tmpfs /tmp <console image> with an injected OIDC_AUTHORITY", "result": "refused to start: OIDC_AUTHORITY must be an http(s) URL without query or fragment"},
+    {"command": "Playwright e2e on a fresh Compose stack", "result": "4 passed, 0 failed, 0 retries, 1 skipped (screenshot spec)", "details": "e2e-summary.json"}
+  ]
+}

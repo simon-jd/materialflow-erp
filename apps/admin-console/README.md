@@ -24,11 +24,11 @@ npm run dev            # http://localhost:5173, calls the gateway on :8081 (CORS
 
 Sign in as one of the synthetic users in `deploy/compose/keycloak/materialflow-realm.json`:
 
-| User | Roles | Use |
-|---|---|---|
-| `synthetic-sales` | `SALES_ORDER_WRITE` | Creates orders (the maker). |
-| `synthetic-demo` | All roles | The frozen approver of the seeded sales-order template (the checker). |
-| `synthetic-readonly` | None | Can browse but has no write actions; the API returns 403 on writes. |
+| User                 | Roles               | Use                                                                   |
+| -------------------- | ------------------- | --------------------------------------------------------------------- |
+| `synthetic-sales`    | `SALES_ORDER_WRITE` | Creates orders (the maker).                                           |
+| `synthetic-demo`     | All roles           | The frozen approver of the seeded sales-order template (the checker). |
+| `synthetic-readonly` | None                | Can browse but has no write actions; the API returns 403 on writes.   |
 
 Orders above 25,000 or above the discount threshold wait in the approval queue. The maker cannot
 approve their own order.
@@ -42,15 +42,19 @@ origin.
 `index.html` loads `/config.js` before the bundle:
 
 ```js
-window.__MATERIALFLOW_CONFIG__ = { apiBaseUrl: "", oidcAuthority: "https://id.example.com/realms/materialflow", oidcClientId: "materialflow-admin-console" };
+window.__MATERIALFLOW_CONFIG__ = {
+  apiBaseUrl: "",
+  oidcAuthority: "https://id.example.com/realms/materialflow",
+  oidcClientId: "materialflow-admin-console",
+};
 ```
 
-| Key | Container env var | Meaning |
-|---|---|---|
-| `apiBaseUrl` | `API_BASE_URL` | API origin. Leave it empty when `/api/*` is served from the console's origin (CloudFront, an ingress or the nginx proxy). |
-| `oidcAuthority` | `OIDC_AUTHORITY` | Browser-facing realm URL. The token issuer must match the gateway's `OIDC_ISSUER_URI`. |
-| `oidcClientId` | `OIDC_CLIENT_ID` | Public client with this origin's exact `/auth/callback` redirect URI and web origin. |
-| | `API_UPSTREAM` | Optional. The container proxies `/api/` here, for example `http://edge-gateway:8081`. Without it, `/api/` returns 404. |
+| Key             | Container env var | Meaning                                                                                                                   |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `apiBaseUrl`    | `API_BASE_URL`    | API origin. Leave it empty when `/api/*` is served from the console's origin (CloudFront, an ingress or the nginx proxy). |
+| `oidcAuthority` | `OIDC_AUTHORITY`  | Browser-facing realm URL. The token issuer must match the gateway's `OIDC_ISSUER_URI`.                                    |
+| `oidcClientId`  | `OIDC_CLIENT_ID`  | Public client with this origin's exact `/auth/callback` redirect URI and web origin.                                      |
+|                 | `API_UPSTREAM`    | Optional. The container proxies `/api/` here, for example `http://edge-gateway:8081`. Without it, `/api/` returns 404.    |
 
 The image writes `/config.js` and the Content-Security-Policy (`connect-src` includes the OIDC origin)
 at start and refuses to start on malformed values. In development, Vite serves `/config.js` from
@@ -58,9 +62,12 @@ at start and refuses to start on malformed values. In development, Vite serves `
 default to the local stack. `npm run build` output contains no environment values.
 
 Static hosting (S3/CloudFront): upload `dist/`, serve `index.html` for unknown paths (SPA fallback),
-supply `/config.js` per environment with `Cache-Control: no-store`, route `/api/*` to the gateway on
-the same origin, cache `assets/*` as immutable, and send the same security headers as
-[`docker/40-materialflow-runtime-config.sh`](docker/40-materialflow-runtime-config.sh).
+supply `/config.js` per environment with `Cache-Control: no-store`, cache `assets/*` as immutable,
+and send the same security headers as
+[`docker/40-materialflow-runtime-config.sh`](docker/40-materialflow-runtime-config.sh). Route `/api/*`
+to the gateway on the same origin, and either forward the viewer `Host` or keep the gateway's CORS
+allow-list (`MATERIALFLOW_CORS_ALLOWED_ORIGINS`) empty. Browsers send `Origin` on same-origin POSTs,
+and with a rewritten `Host` the gateway would treat them as cross-origin.
 
 ## Test
 
