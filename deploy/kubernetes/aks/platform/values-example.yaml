@@ -1,0 +1,11 @@
+# Placeholder environment values (shape of `terraform output -raw helm_environment_values`), used
+# by CI to lint and render the chart. Real values come from Terraform.
+platform:
+  publicHost: materialflow.example.test
+  registry: example.azurecr.io/materialflow
+  acrLoginServer: example.azurecr.io
+  keyVault: {name: kv-example, tenantId: 00000000-0000-0000-0000-000000000000, clientId: 00000000-0000-0000-0000-000000000001}
+  postgres: {host: psql-example.private.postgres.database.azure.com, user: mfadmin, subnet: 10.42.8.0/24}
+  ingress: {publicIpName: pip-example, resourceGroup: rg-example}
+keycloak:
+  imageTag: ci

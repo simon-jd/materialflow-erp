@@ -1,0 +1,51 @@
+{{- if .Values.toolbox.enabled }}
+# psql inside the VNet for operators and the fault drills (the server is private-access only):
+#   kubectl -n materialflow exec deploy/materialflow-toolbox -- psql -c 'select 1'
+# It holds advisory locks and creates the drills' fixture triggers as the administrator.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: materialflow-toolbox
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: materialflow-toolbox}
+  template:
+    metadata:
+      labels: {app: materialflow-toolbox, app.kubernetes.io/part-of: materialflow}
+    spec:
+      serviceAccountName: materialflow-platform
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "platform.podSecurity" . | nindent 8 }}
+        runAsUser: 70
+        runAsGroup: 70
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: psql
+          image: {{ include "platform.mirror" (dict "root" . "image" .Values.toolbox.image) }}
+          command: [sleep, infinity]
+          env:
+            - {name: PGHOST, value: {{ .Values.platform.postgres.host | quote }}}
+            - {name: PGUSER, value: {{ .Values.platform.postgres.user | quote }}}
+            - {name: PGDATABASE, value: materialflow}
+            - {name: PGSSLMODE, value: require}
+            - {name: PGCONNECT_TIMEOUT, value: "5"}
+            - {name: HOME, value: /tmp}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef: {name: materialflow-runtime, key: POSTGRES_PASSWORD}
+          resources:
+            {{- toYaml .Values.toolbox.resources | nindent 12 }}
+          securityContext:
+            {{- include "platform.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: secrets-store, mountPath: /mnt/secrets-store, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        {{- include "platform.secretsStoreVolume" . | nindent 8 }}
+{{- end }}

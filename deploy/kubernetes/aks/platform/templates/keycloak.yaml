@@ -1,0 +1,84 @@
+{{- $host := include "platform.host" . }}
+# Keycloak from deploy/docker/Dockerfile.keycloak (optimized build, realm baked in, every public
+# path under /idp, health on the management port 9000). Its database is `keycloak` on the
+# Flexible Server; one replica with a local cache, as in the AWS environment.
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  selector: {app: keycloak}
+  ports:
+    - {name: http, port: 8080, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # cache=local: never two instances against one database at once
+  selector:
+    matchLabels: {app: keycloak}
+  template:
+    metadata:
+      labels: {app: keycloak, app.kubernetes.io/part-of: materialflow}
+    spec:
+      serviceAccountName: materialflow-platform
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "platform.podSecurity" . | nindent 8 }}
+        runAsUser: 1000
+        runAsGroup: 0
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: keycloak
+          image: "{{ required "platform.registry is required" .Values.platform.registry }}/keycloak:{{ required "keycloak.imageTag is required" .Values.keycloak.imageTag }}"
+          args: [start, --optimized, --import-realm]
+          env:
+            - {name: KC_DB_URL, value: "jdbc:postgresql://{{ required "platform.postgres.host is required" .Values.platform.postgres.host }}:5432/keycloak?sslmode=require"}
+            - {name: KC_DB_USERNAME, value: {{ required "platform.postgres.user is required" .Values.platform.postgres.user | quote }}}
+            - {name: KC_DB_POOL_MAX_SIZE, value: "10"}
+            # Every URL Keycloak generates (issuer, endpoints, redirects) uses the public origin.
+            - {name: KC_HOSTNAME, value: "https://{{ $host }}/idp"}
+            - {name: KC_HTTP_ENABLED, value: "true"}
+            # Envoy at the Gateway sets X-Forwarded-Proto: https, so session cookies are Secure.
+            - {name: KC_PROXY_HEADERS, value: xforwarded}
+            - {name: KC_BOOTSTRAP_ADMIN_USERNAME, value: {{ .Values.keycloak.bootstrapAdminUser | quote }}}
+            # Resolves the admin console redirect URI placeholders of the baked-in realm.
+            - {name: MATERIALFLOW_PUBLIC_URL, value: "https://{{ $host }}"}
+            - {name: JAVA_OPTS_KC_HEAP, value: "-XX:MaxRAMPercentage=65 -XX:InitialRAMPercentage=30"}
+          envFrom:
+            - secretRef: {name: materialflow-keycloak}
+          ports:
+            - {name: http, containerPort: 8080}
+            - {name: management, containerPort: 9000}
+          startupProbe:
+            httpGet: {path: /health/started, port: management}
+            periodSeconds: 5
+            failureThreshold: 72
+          readinessProbe:
+            httpGet: {path: /health/ready, port: management}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /health/live, port: management}
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Keycloak writes its compiled state and temp files under /opt/keycloak/data.
+            readOnlyRootFilesystem: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: secrets-store, mountPath: /mnt/secrets-store, readOnly: true}
+      volumes:
+        {{- include "platform.secretsStoreVolume" . | nindent 8 }}

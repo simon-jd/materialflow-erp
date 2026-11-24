@@ -1,0 +1,30 @@
+# cert-manager v1.21.3 for the AKS environment (docs/runbooks/azure-deploy.md):
+#   helm upgrade --install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.3 \
+#     -n cert-manager --create-namespace -f deploy/kubernetes/aks/cert-manager-values.yaml
+crds:
+  enabled: true
+  keep: true
+
+# HTTP-01 challenges are answered through an HTTPRoute on the public Gateway (the AKS-managed
+# Gateway API CRDs are installed by the add-on).
+config:
+  apiVersion: controller.config.cert-manager.io/v1alpha1
+  kind: ControllerConfiguration
+  enableGatewayAPI: true
+
+prometheus:
+  enabled: false
+
+nodeSelector: {workload: app}
+resources:
+  requests: {cpu: 10m, memory: 64Mi}
+webhook:
+  nodeSelector: {workload: app}
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+cainjector:
+  nodeSelector: {workload: app}
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}
+startupapicheck:
+  nodeSelector: {workload: app}

@@ -1,0 +1,9 @@
+{{- range $name := list .Values.namespaces.edge .Values.namespaces.loadgen }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/part-of: materialflow-platform
+{{- end }}
