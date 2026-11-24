@@ -1,0 +1,77 @@
+{
+  "status": "passed",
+  "scope": "AKS dev environment, synthetic data",
+  "public_url": "https://materialflow-erp.westus.cloudapp.azure.com",
+  "checked_at": "2026-11-24T19:38:01.297721+00:00",
+  "health": {
+    "erp-core": "UP",
+    "edge-gateway": "UP",
+    "stream-projection": "UP",
+    "integration-adapter": "UP",
+    "event-relay": "UP"
+  },
+  "order": {
+    "id": "a074ce74-1006-4b06-bb56-9e148f0a32cc",
+    "status_api": "BACKORDERED",
+    "status_db": "BACKORDERED"
+  },
+  "projection": {
+    "aggregate_id": "a074ce74-1006-4b06-bb56-9e148f0a32cc",
+    "version": 2
+  },
+  "outbox": [
+    {
+      "event_id": "8a697bb9-04fa-4e29-9638-604e7ed99ed6",
+      "event_type": "SalesOrderAllocated",
+      "status": "PUBLISHED",
+      "trace_parent": "00-2c9a8741d291ae4d8a75ecab5d04c4ec-d08037be363f9f37-01",
+      "published": "t"
+    }
+  ],
+  "kafka": {
+    "topic": "materialflow.domain-events.v1",
+    "records": 1,
+    "partition_offset": [
+      [
+        "Partition:0",
+        "Offset:11"
+      ]
+    ]
+  },
+  "consumer_inbox": [
+    {
+      "event_id": "8a697bb9-04fa-4e29-9638-604e7ed99ed6",
+      "consumer": "erp-core-backorder-reallocation-v1"
+    }
+  ],
+  "synthetic_grpc": {
+    "status": "CONFIRMED",
+    "purchase_order_id": "4f45d120-2d0a-46d6-b765-d311a94171f4"
+  },
+  "trace": {
+    "trace_id": "2c9a8741d291ae4d8a75ecab5d04c4ec",
+    "services": [
+      "materialflow-edge-gateway",
+      "materialflow-erp-core",
+      "materialflow-event-relay"
+    ],
+    "operation_names": [
+      "HTTP POST",
+      "authenticate bearertoken",
+      "authorize exchange",
+      "authorize request",
+      "domain event consume",
+      "evalsha",
+      "get",
+      "http post",
+      "http post /api/v1/orders",
+      "materialflow.domain-events.v1 send",
+      "outbox publish",
+      "sales order database transaction",
+      "secured request",
+      "security filterchain after",
+      "security filterchain before"
+    ],
+    "span_count": 18
+  }
+}

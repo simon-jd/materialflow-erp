@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-11-24T19:40:26Z",
+  "total": 55,
+  "ready": 55,
+  "by_namespace": {
+    "aks-istio-system": {
+      "pods": 2,
+      "ready": 2
+    },
+    "cert-manager": {
+      "pods": 3,
+      "ready": 3
+    },
+    "kube-system": {
+      "pods": 33,
+      "ready": 33
+    },
+    "materialflow": {
+      "pods": 15,
+      "ready": 15
+    },
+    "materialflow-edge": {
+      "pods": 2,
+      "ready": 2
+    }
+  },
+  "not_ready": []
+}
