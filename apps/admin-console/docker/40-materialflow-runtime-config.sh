@@ -61,6 +61,8 @@ if [ -n "$API_UPSTREAM" ]; then
 location /api/ {
     proxy_pass $API_UPSTREAM;
     proxy_http_version 1.1;
+    # Keep the browser's Host so the gateway sees the request as same-origin and skips CORS checks.
+    proxy_set_header Host \$http_host;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
     proxy_set_header X-Request-Id \$request_id;
