@@ -1,0 +1,162 @@
+name: cd-azure
+
+# Continuous delivery of main to the AKS dev environment defined in deploy/terraform/azure.
+# Every job is skipped unless the AZURE_CLIENT_ID variable exists, so the public repository and
+# its forks show skipped runs rather than failures. Azure access is a short-lived OIDC exchange
+# for the user-assigned identity Terraform creates (AcrPush on the registry, AKS RBAC Writer in
+# the materialflow namespace only); no Azure secrets are stored. Setup: docs/runbooks/azure-deploy.md.
+#
+# This workflow deploys the application chart (deploy/helm/materialflow). The platform chart
+# (Kafka, Redis, Keycloak, Gateway, certificates) needs cluster-scoped rights and is installed by
+# an operator.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer push waits instead of cancelling a rollout halfway.
+concurrency:
+  group: cd-azure-dev
+  cancel-in-progress: false
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  APPS: erp-core event-relay edge-gateway stream-projection integration-adapter
+
+jobs:
+  build:
+    name: Build and test
+    if: vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Compile, test and package
+        run: mvn -B -ntp verify
+      # The images package exactly these tested JARs (deploy/docker/Dockerfile.runtime).
+      - name: Collect application JARs
+        run: |
+          mkdir -p jars
+          for app in $APPS; do
+            cp "apps/${app}/target/${app}-0.1.0-SNAPSHOT.jar" "jars/${app}.jar"
+          done
+          sha256sum jars/*.jar | tee jars/SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jars
+          path: jars/
+          retention-days: 7
+          if-no-files-found: error
+
+  images:
+    name: Push linux/arm64 images
+    needs: build
+    # The AKS nodes are Arm64 (Bpsv2); a native Arm64 runner builds without emulation.
+    runs-on: ubuntu-24.04-arm
+    environment: azure-dev
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: jars
+          path: jars
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build and push images
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+        run: |
+          az acr login --name "$ACR_NAME"
+          registry="${ACR_NAME}.azurecr.io/materialflow"
+          # A rerun of the same commit skips images an earlier attempt already pushed.
+          pushed() {
+            az acr manifest show --registry "$ACR_NAME" --name "materialflow/$1:${IMAGE_TAG}" >/dev/null 2>&1
+          }
+          build() {
+            docker buildx build --platform linux/arm64 --provenance=false --sbom=false --push "$@"
+          }
+
+          cp deploy/docker/Dockerfile.runtime jars/Dockerfile
+          for app in $APPS; do
+            if pushed "$app"; then echo "${app}:${IMAGE_TAG} exists"; continue; fi
+            build --build-arg "JAR_FILE=${app}.jar" --tag "${registry}/${app}:${IMAGE_TAG}" jars
+          done
+          if ! pushed admin-console; then
+            build --tag "${registry}/admin-console:${IMAGE_TAG}" apps/admin-console
+          fi
+
+  deploy:
+    name: Helm upgrade and smoke test
+    needs: images
+    runs-on: ubuntu-24.04
+    environment: azure-dev
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
+      - uses: azure/use-kubelogin@0ce7c36141aa27d4934872cf00b0120804c98a29 # v1.3
+        with:
+          kubelogin-version: v0.2.22
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: v4.3.2
+      - name: Cluster credentials (Entra ID, no static token)
+        env:
+          RESOURCE_GROUP: ${{ vars.AKS_RESOURCE_GROUP }}
+          CLUSTER: ${{ vars.AKS_CLUSTER_NAME }}
+        run: |
+          az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER" --file "$RUNNER_TEMP/kubeconfig"
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+          KUBECONFIG="$RUNNER_TEMP/kubeconfig" kubelogin convert-kubeconfig -l azurecli
+      # Helm 4's --rollback-on-failure is the former --atomic: a release that does not become
+      # ready within the timeout is rolled back to the previous revision and the job fails.
+      - name: Deploy the application chart
+        env:
+          # `terraform output -raw helm_environment_values`: registry, database host, issuer URL,
+          # workload identity client ID. Not secret.
+          AKS_HELM_VALUES: ${{ vars.AKS_HELM_VALUES }}
+        run: |
+          printf '%s\n' "$AKS_HELM_VALUES" > "$RUNNER_TEMP/environment-values.yaml"
+          helm upgrade --install materialflow deploy/helm/materialflow \
+            --namespace materialflow \
+            -f deploy/helm/materialflow/values-aks.yaml \
+            -f "$RUNNER_TEMP/environment-values.yaml" \
+            --set global.imageTag="$IMAGE_TAG" \
+            --rollback-on-failure --wait --timeout 15m
+          kubectl --namespace materialflow get deployments
+      - name: Smoke test through the public URL
+        env:
+          MATERIALFLOW_PUBLIC_URL: ${{ vars.MATERIALFLOW_PUBLIC_URL }}
+          SMOKE_CONSOLE: 'true'
+        run: bash tests/deployment/aws-smoke.sh

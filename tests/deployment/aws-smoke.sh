@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Post-deploy smoke test of the AWS environment through its public CloudFront URL.
+# Post-deploy smoke test through the public URL: the AWS environment (CloudFront) or the AKS one
+# (Gateway API, docs/runbooks/azure-deploy.md); both serve /, /api, /idp and /actuator/health on one origin.
 # Read-only: it creates no orders. Usage:
 #   MATERIALFLOW_PUBLIC_URL=https://dxxxxxxxxxxxxx.cloudfront.net bash tests/deployment/aws-smoke.sh
 # Set SMOKE_CONSOLE=true to also check the admin console and its runtime config.
