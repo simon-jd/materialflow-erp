@@ -1,0 +1,69 @@
+{
+  "host": {
+    "machine": "Apple M3 Pro",
+    "logical_cpus": 12,
+    "memory_gib": 36,
+    "macos": "27.0.1"
+  },
+  "docker": {
+    "desktop_vm_cpus": 12,
+    "desktop_vm_memory_gib": 11.7,
+    "server_version": "29.8.0",
+    "compose": "5.5.1",
+    "kernel": "7.0.12-linuxkit"
+  },
+  "compose_project": "mf-fault-matrix",
+  "services_started": [
+    "postgres",
+    "redis",
+    "kafka",
+    "kafka-init",
+    "erp-core",
+    "event-relay"
+  ],
+  "applications": {
+    "erp-core": {
+      "image": "materialflow-qualification/erp-core:fault-matrix",
+      "image_id": "sha256:dbbc42c7d14c3b18b52c80e3d6bdb47729b0662aeaa5c836e2559ece3e9f004a",
+      "jar_sha256": "0bcd3130bb09932fc1a158cacdd09b672a311f92b93f8fbfe48c1781b2f63791",
+      "jar_matches_tested_build": true,
+      "restart_policy": "no",
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "profiles": [
+        "fault-injection"
+      ]
+    },
+    "event-relay": {
+      "image": "materialflow-qualification/event-relay:fault-matrix",
+      "image_id": "sha256:d6ef46a0f0acae85e55d1bbc58b8ca3f2aba23a395d9d1ae5909daaaf83a9d03",
+      "jar_sha256": "90eaaec319b5201e31d88e01eaf1e56e85f271af9ca0b6bc1e97aebe8c274d54",
+      "jar_matches_tested_build": true,
+      "restart_policy": "no",
+      "cpus": 2.0,
+      "memory_bytes": 1073741824,
+      "profiles": []
+    }
+  },
+  "supporting_images": {
+    "postgres": {
+      "image": "postgres:17.11-alpine",
+      "image_id": "sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0"
+    },
+    "kafka": {
+      "image": "apache/kafka:4.1.2",
+      "image_id": "sha256:5cc2a2fd93fa2687b44015eee04fb2c3edd9e526bd64bf8bec5ff1e268772e0e"
+    },
+    "redis": {
+      "image": "redis:8.2.1-alpine",
+      "image_id": "sha256:987c376c727652f99625c7d205a1cba3cb2c53b92b0b62aade2bd48ee1593232"
+    }
+  },
+  "app_jvm": "openjdk version \"21.0.13.1\" 2026-11-17 LTS",
+  "postgres": "17.11",
+  "drill_python": "3.15.0",
+  "build": {
+    "jdk": "openjdk version \"21.0.13.1\" 2026-11-17",
+    "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)"
+  }
+}

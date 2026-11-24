@@ -1,0 +1,108 @@
+{
+  "project": "mf-fault-matrix",
+  "scope": "local synthetic Docker, real JVM SIGKILL",
+  "started_at": "2026-11-24T08:20:19.344337+00:00",
+  "windows": [
+    "consumer-pre-commit",
+    "consumer-post-commit",
+    "relay-post-ack",
+    "dlq-post-ack"
+  ],
+  "repeat": 1,
+  "images": {
+    "erp-core": {
+      "image": "materialflow-qualification/erp-core:fault-matrix",
+      "image_id": "sha256:dbbc42c7d14c3b18b52c80e3d6bdb47729b0662aeaa5c836e2559ece3e9f004a"
+    },
+    "event-relay": {
+      "image": "materialflow-qualification/event-relay:fault-matrix",
+      "image_id": "sha256:d6ef46a0f0acae85e55d1bbc58b8ca3f2aba23a395d9d1ae5909daaaf83a9d03"
+    }
+  },
+  "status": "passed",
+  "totals": {
+    "runs": 4,
+    "sigkills": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "per_window": {
+    "consumer-pre-commit": {
+      "number": 1,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 44694,
+        "max": 44694,
+        "min": 44694
+      },
+      "restart_to_recovered_ms": {
+        "p50": 44250,
+        "max": 44250,
+        "min": 44250
+      },
+      "failures": []
+    },
+    "consumer-post-commit": {
+      "number": 2,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 46244,
+        "max": 46244,
+        "min": 46244
+      },
+      "restart_to_recovered_ms": {
+        "p50": 45955,
+        "max": 45955,
+        "min": 45955
+      },
+      "failures": []
+    },
+    "relay-post-ack": {
+      "number": 3,
+      "service": "event-relay",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 27311,
+        "max": 27311,
+        "min": 27311
+      },
+      "restart_to_recovered_ms": {
+        "p50": 27014,
+        "max": 27014,
+        "min": 27014
+      },
+      "failures": []
+    },
+    "dlq-post-ack": {
+      "number": 4,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 45653,
+        "max": 45653,
+        "min": 45653
+      },
+      "restart_to_recovered_ms": {
+        "p50": 45335,
+        "max": 45335,
+        "min": 45335
+      },
+      "failures": []
+    }
+  },
+  "finished_at": "2026-11-24T08:23:42.322209+00:00"
+}
