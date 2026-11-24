@@ -1,0 +1,7 @@
+# Measurement variant for ADR 0011 only: the single erp-core container keeps one
+# static-membership identity across `docker start`. Not for Deployments or ECS
+# services, whose replicas get a new identity on every rollout.
+services:
+  erp-core:
+    environment:
+      MATERIALFLOW_KAFKA_CONSUMER_GROUP_INSTANCE_ID: erp-core-0

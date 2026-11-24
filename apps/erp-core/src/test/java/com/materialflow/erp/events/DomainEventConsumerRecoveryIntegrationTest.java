@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.sql.DataSource;
@@ -181,6 +182,34 @@ class DomainEventConsumerRecoveryIntegrationTest {
         }
     }
 
+    @Test
+    void crashWindowGatesRunAfterTheSideEffectIsDurableAndBeforeTheOffsetCommit() throws Exception {
+        record Observation(long recordOffset, long committedOffset, int durableEffects) {
+        }
+        try (var scenario = new Scenario(true, false)) {
+            UUID eventId = UUID.randomUUID();
+            Map<ConsumerCrashWindowGate.Window, Observation> observed = new ConcurrentHashMap<>();
+            scenario.crashWindowGate = (window, record) -> {
+                try {
+                    int effects = window == ConsumerCrashWindowGate.Window.AFTER_INBOX_COMMIT
+                            ? inboxCount(eventId) : scenario.dlqRecords(Duration.ofSeconds(1)).size();
+                    observed.put(window, new Observation(record.offset(), scenario.committedOffset(), effects));
+                } catch (Exception exception) {
+                    throw new IllegalStateException(exception);
+                }
+            };
+            scenario.send(envelope(eventId));
+            scenario.send("not-json");
+            scenario.start();
+            await().atMost(Duration.ofSeconds(20)).untilAsserted(() ->
+                    assertThat(scenario.committedOffset()).isEqualTo(2));
+            // Each gate saw its own side effect committed/acknowledged and its own offset still uncommitted.
+            assertThat(observed).containsExactlyInAnyOrderEntriesOf(Map.of(
+                    ConsumerCrashWindowGate.Window.AFTER_INBOX_COMMIT, new Observation(0, -1, 1),
+                    ConsumerCrashWindowGate.Window.AFTER_DEAD_LETTER_SEND, new Observation(1, 1, 1)));
+        }
+    }
+
     private int inboxCount(UUID eventId) {
         return jdbc.queryForObject("SELECT count(*) FROM consumer_inbox WHERE event_id = ?", Integer.class, eventId);
     }
@@ -199,6 +228,7 @@ class DomainEventConsumerRecoveryIntegrationTest {
         private final String group = "verify-" + UUID.randomUUID();
         private final SimpleMeterRegistry meters = new SimpleMeterRegistry();
         private final AtomicReference<RuntimeException> lastFailure = new AtomicReference<>();
+        private ConsumerCrashWindowGate crashWindowGate = ConsumerCrashWindowGate.NONE;
         private final Admin admin = Admin.create(Map.of("bootstrap.servers", KAFKA.getBootstrapServers()));
         private final DefaultKafkaProducerFactory<Object, Object> producerFactory = new DefaultKafkaProducerFactory<>(
                 Map.of("bootstrap.servers", KAFKA.getBootstrapServers(), "acks", "all",
@@ -230,10 +260,10 @@ class DomainEventConsumerRecoveryIntegrationTest {
             consumerConfig.put("group.id", group);
             var consumerFactory = new DefaultKafkaConsumerFactory<Object, Object>(consumerConfig);
             var factory = configuration.kafkaListenerContainerFactory(consumerFactory,
-                    configuration.domainEventErrorHandler(kafka, meters));
+                    configuration.domainEventErrorHandler(kafka, meters, crashWindowGate));
             container = factory.createContainer(topic);
             container.getContainerProperties().setPollTimeout(100);
-            var listener = new DomainEventListener(inbox, Tracer.NOOP, Propagator.NOOP);
+            var listener = new DomainEventListener(inbox, Tracer.NOOP, Propagator.NOOP, crashWindowGate);
             container.setupMessageListener((MessageListener<Object, Object>) record -> {
                 try {
                     listener.onEvent((ConsumerRecord<String, String>) (ConsumerRecord<?, ?>) record);

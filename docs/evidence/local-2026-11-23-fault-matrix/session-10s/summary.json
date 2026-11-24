@@ -1,0 +1,88 @@
+{
+  "project": "mf-fault-matrix",
+  "scope": "local synthetic Docker, real JVM SIGKILL",
+  "started_at": "2026-11-24T09:03:11.353545+00:00",
+  "windows": [
+    "consumer-pre-commit",
+    "consumer-post-commit",
+    "dlq-post-ack"
+  ],
+  "repeat": 5,
+  "images": {
+    "erp-core": {
+      "image": "materialflow-qualification/erp-core:fault-matrix-detect",
+      "image_id": "sha256:ff9454275f8b81e9508abd4819c44d136ce186582524fbf17c8016205e561870"
+    },
+    "event-relay": {
+      "image": "materialflow-qualification/event-relay:fault-matrix-detect",
+      "image_id": "sha256:5965a092e01f1544d98b9391ae02c015dec1db3989b0297f56db92b6c7e0c6a6"
+    }
+  },
+  "status": "passed",
+  "totals": {
+    "runs": 15,
+    "sigkills": 15,
+    "passed": 15,
+    "failed": 0
+  },
+  "per_window": {
+    "consumer-pre-commit": {
+      "number": 1,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 10746,
+        "max": 11532,
+        "min": 9006
+      },
+      "restart_to_recovered_ms": {
+        "p50": 10458,
+        "max": 11241,
+        "min": 8704
+      },
+      "failures": []
+    },
+    "consumer-post-commit": {
+      "number": 2,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 7942,
+        "max": 11416,
+        "min": 7808
+      },
+      "restart_to_recovered_ms": {
+        "p50": 7668,
+        "max": 11149,
+        "min": 7559
+      },
+      "failures": []
+    },
+    "dlq-post-ack": {
+      "number": 4,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 11133,
+        "max": 11546,
+        "min": 9309
+      },
+      "restart_to_recovered_ms": {
+        "p50": 10888,
+        "max": 11274,
+        "min": 9075
+      },
+      "failures": []
+    }
+  },
+  "finished_at": "2026-11-24T09:07:40.734631+00:00"
+}

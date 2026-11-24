@@ -6,6 +6,13 @@ is `erp-core-reallocation-v1`; consumer DLQ is the source topic plus `.DLQ`.
 The Relay's PostgreSQL `DEAD_LETTER` rows and the Streams projection DLQ are
 separate recovery paths.
 
+A killed consumer's partition is reassigned once its group session expires:
+`MATERIALFLOW_KAFKA_CONSUMER_SESSION_TIMEOUT` (default `10s`) and
+`MATERIALFLOW_KAFKA_CONSUMER_HEARTBEAT_INTERVAL` (default `3s`). Raise the timeout
+if unexpected rebalances follow GC pauses or CPU throttling. Set
+`MATERIALFLOW_KAFKA_CONSUMER_GROUP_INSTANCE_ID` only for a replica whose identity
+survives restarts and rollouts; see [ADR 0011](../adr/0011-consumer-failure-detection.md).
+
 Provision the consumer DLQ before enabling consumers, with at least as many
 partitions as the source and suitable replication/retention. Missing-DLQ recovery
 blocks progress intentionally. Configure access for the application to publish to
@@ -57,7 +64,7 @@ The locked-table case exceeds the old retry budget, then releases the lock.
 The missing-DLQ case stops/recreates the consumer object with the same group,
 provisions the DLQ and observes replay. This is a consumer restart, not a JVM kill.
 
-The separate [runtime qualification drill](runtime-qualification.md) uses actual
-SIGKILL on the deployed Core before Inbox commit, then checks retained offset,
-restart and duplicate delivery. It does not cover a kill after Inbox commit but
-before source offset commit, or after DLQ ACK before source offset commit.
+The separate [process-kill fault matrix](../../tests/failure/README.md) uses actual
+SIGKILL on the deployed Core before Inbox commit, after Inbox commit but before the
+source offset commit, and after DLQ ACK but before the source offset commit, then
+checks retained offsets, restart, Inbox absorption and DLQ duplication.

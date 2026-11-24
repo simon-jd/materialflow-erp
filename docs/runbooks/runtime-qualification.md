@@ -87,36 +87,48 @@ builds/scans during measured phases; the workstation still has unrelated workloa
 
 ## Actual process death
 
-Run after performance measurements when the stack is quiescent:
+Run after performance measurements when the stack is quiescent. The two
+original kills (windows 1 and 3) need only the qualification overlay:
 
 ```bash
 python3 tests/failure/process-kill-recovery.py \
-  --project materialflow-qualification-final \
-  --output /tmp/materialflow-process-kill-NEW.json
+  --project materialflow-qualification-final --windows 1,3 \
+  --output-dir /tmp/materialflow-process-kill-NEW
 ```
 
-The script accepts only the three named qualification projects and verifies app
-image labels and disabled restart policies. Unique event-specific PostgreSQL
-triggers and advisory-lock holders expose the exact crash windows. It checks
-SIGKILL exit code 137 and a new process start, then removes the fixture triggers
-and restarts the killed application in `finally`.
+The full four-window matrix (`--windows all --repeat 5`) also needs Core's
+`fault-injection` profile, so run it on its own disposable project started with
+`-f deploy/compose/fault-injection.yml`; [the drill README](../../tests/failure/README.md)
+has the exact commands. Never add that overlay to a stack used for performance
+or security evidence.
 
-- Consumer: block Inbox INSERT before commit; verify zero visible Inbox rows and
-  unchanged committed source offset; kill the Core JVM, release the gate and
-  restart. The retained record commits; republish the same ID and verify a second
-  Kafka offset but still one Inbox row. The probe has no inventory side effect.
+The script accepts only the named qualification projects and verifies app image
+labels and disabled restart policies. Unique event-specific PostgreSQL triggers,
+advisory-lock holders and, for windows 2 and 4, Core's crash-window gate expose the
+exact crash windows. It checks SIGKILL exit code 137 and a new process start, then
+removes the fixture triggers and restarts the killed application in `finally`.
+
+- Consumer before commit: block the Inbox INSERT; verify no Inbox row, no business
+  effect and unchanged committed source offset; kill Core, release and restart.
+  The retained record commits once; a republished duplicate is absorbed.
+- Consumer after commit: hold Core after the Inbox + reallocation transaction
+  committed but before the offset commit; kill it. The restarted consumer receives
+  the record again and the Inbox key absorbs it: still one business update.
 - Relay: after Kafka ACK, block the PUBLISHED database write; verify the Kafka
   record is already readable and the committed row is still CLAIMED. Kill the
   Relay JVM. After restart and natural lease expiry, verify PUBLISHED on attempt 2
   and the same event ID at offsets 0 and 1 in its isolated topic. This demonstrates
   at-least-once replay, not exactly-once delivery.
+- DLQ: hold Core after the dead-letter send was acknowledged but before the source
+  offset commit; kill it. After restart the record is quarantined again (a DLQ
+  duplicate) and the source offset advances.
 
-A failed script exits nonzero and retains a failed evidence record. If interrupted
-outside normal cleanup, inspect `pg_stat_activity` for `mf_qualification_*` holders
-and `pg_trigger` for matching fixtures in this disposable database. Lock holders
-also have a 180-second upper bound. Do not run these fixtures on shared/production
-databases. Inbox-commit→offset-commit and DLQ-ACK→offset-commit kills are separate,
-unqualified windows.
+Each run appends a record to `kills.jsonl`; `summary.json` aggregates passes and
+recovery times. A failed run is retained and the script exits nonzero. If
+interrupted outside normal cleanup, inspect `pg_stat_activity` for
+`mf_qualification_*` holders and `pg_trigger` for matching fixtures in this
+disposable database. Lock holders also have a 180-second upper bound. Do not run
+these fixtures on shared/production databases.
 
 ## Preserve evidence and stop
 

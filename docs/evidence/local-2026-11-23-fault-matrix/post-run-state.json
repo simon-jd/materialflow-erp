@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-11-24T08:40:47.265523+00:00",
+  "fixture_triggers": 0,
+  "fixture_functions": 0,
+  "fixture_lock_holders": 0,
+  "advisory_lock_waiters": 0,
+  "outbox_by_status": {
+    "PUBLISHED": 19
+  },
+  "consumer_group": {
+    "group": "erp-core-reallocation-v1",
+    "topic": "materialflow.domain-events.v1",
+    "committed": 38,
+    "log_end": 38,
+    "lag": 0
+  },
+  "dlq_log_end": 12,
+  "inbox_rows": 26,
+  "fixture_orders": {
+    "BACKORDERED": "1",
+    "RESERVED": "13"
+  },
+  "reserve_ledger_rows_for_fixture_orders": 13,
+  "apps_running": {
+    "erp-core": true,
+    "event-relay": true
+  }
+}
