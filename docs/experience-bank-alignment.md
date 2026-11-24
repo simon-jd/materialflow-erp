@@ -22,6 +22,10 @@ Result provenance: owner-confirmed separate cloud-hosted test results. The READM
 - Single-node Kafka broker 4.1.0 in an 8-core/16 GiB local Docker environment with synthetic data; no multi-node, partition, retention-expiry, production-scale, cloud or ML/GPU claim.
 - The 60 JUnit cases do not prove the five Docker applications run together; health, JWT, gRPC and tracing connectivity is a separate acceptance denominator.
 
+## 2026-11-23 local runs
+
+The 4-window × 5 fault matrix has since been run with real process kills: 20 SIGKILLs, 20 passed ([evidence](evidence/local-2026-11-23-fault-matrix/README.md)), followed by 30 more kills after the consumer session-timeout change in [ADR 0011](adr/0011-consumer-failure-detection.md). Hot-SKU concurrency ([ADR 0008](adr/0008-inventory-reservation-concurrency.md)), the admin console and the AWS IaC validation have their own evidence folders dated 2026-11-23. These are separate local evidence sets and do not change the denominators above.
+
 ## Local verification
 
 See `docs/alignment-verification.json` for commands and outcomes from this checkout. Supplied cloud numbers, historical checked-in artifacts and new local checks are separate evidence sets. A skipped dependency test is not a pass.
