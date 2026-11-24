@@ -49,10 +49,13 @@ public class OutboxRelay {
         this.deadLettered = registry.counter("outbox_dead_letter_total");
         this.claimLost = registry.counter("outbox_claim_lost_total");
         this.exhausted = registry.counter("outbox_exhausted_total");
-        Gauge.builder("outbox_pending_count", backlog, AtomicLong::get).register(registry);
-        Gauge.builder("outbox_dead_letter_count", deadLetters, AtomicLong::get).register(registry);
+        // Strong references: Micrometer gauges hold their state weakly by default and read NaN
+        // once the owning relay is collected, which made gauge assertions flaky in tests.
+        Gauge.builder("outbox_pending_count", backlog, AtomicLong::get).strongReference(true).register(registry);
+        Gauge.builder("outbox_dead_letter_count", deadLetters, AtomicLong::get).strongReference(true)
+                .register(registry);
         Gauge.builder("outbox_oldest_event_age_seconds", oldestAgeMillis,
-                value -> value.get() / 1000.0).register(registry);
+                value -> value.get() / 1000.0).strongReference(true).register(registry);
     }
 
     @Scheduled(fixedDelayString = "${materialflow.relay.poll-delay:500ms}")
