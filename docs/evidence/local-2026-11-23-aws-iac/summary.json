@@ -1,0 +1,106 @@
+{
+  "date": "2026-11-23",
+  "scope": "Static and local validation of deploy/terraform/aws, the cd-aws and terraform workflows, and the images they deploy. No AWS account was used: no plan, apply or AWS API call.",
+  "environment": {
+    "host": "Apple Silicon Mac (Darwin 27, arm64)",
+    "docker": "Docker Desktop, engine 29.8.0, 12 CPUs / 12.5 GB shared by four parallel agents",
+    "java": "Temurin/OpenJDK 21 via Maven 3.9 (host build of the JARs)"
+  },
+  "tools": {
+    "terraform": "1.17.2 (hashicorp/terraform image)",
+    "aws_provider": "6.74.0",
+    "random_provider": "3.9.1",
+    "tflint": "0.66.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "tflint_ruleset_terraform": "0.17.0 (bundled, preset all)",
+    "trivy": "0.76.2 (aquasec/trivy image, config scan)",
+    "actionlint": "1.7.12 (rhysd/actionlint image, shellcheck 0.11.0 integrated)",
+    "shellcheck": "0.11.0",
+    "mermaid_cli": "12.0.0",
+    "keycloak": "26.3.3",
+    "postgres": "17.11-alpine",
+    "kafka": "apache/kafka 4.1.2",
+    "adot_collector": "0.51.0"
+  },
+  "results": {
+    "terraform_fmt": "pass",
+    "terraform_validate": "pass",
+    "terraform_test": {
+      "runs": 17,
+      "passed": 17,
+      "failed": 0,
+      "providers": "mocked"
+    },
+    "terraform_test_mutation_check": "github_branch=develop makes the OIDC subject run fail as intended",
+    "tflint_root": {
+      "issues": 0
+    },
+    "tflint_recursive": {
+      "issues": 0
+    },
+    "trivy_config": {
+      "unaccepted_findings": 0,
+      "findings_without_inline_ignores": 14,
+      "accepted_checks": [
+        "AWS-0010",
+        "AWS-0011",
+        "AWS-0033",
+        "AWS-0034",
+        "AWS-0053",
+        "AWS-0054",
+        "AWS-0089",
+        "AWS-0132"
+      ]
+    },
+    "actionlint": {
+      "files": [
+        ".github/workflows/cd-aws.yml",
+        ".github/workflows/terraform.yml"
+      ],
+      "errors": 0
+    },
+    "shellcheck": {
+      "files": 3,
+      "issues": 0
+    },
+    "mermaid_render": "pass",
+    "arm64_images_multistage_dockerfile": {
+      "built": 5,
+      "failed": 0
+    },
+    "arm64_images_runtime_dockerfile": {
+      "built": 5,
+      "failed": 0,
+      "jar_sha256_match": 5
+    },
+    "keycloak_image_arm64": "pass",
+    "keycloak_init_script_idempotent": "pass (CREATE DATABASE, then already exists)",
+    "keycloak_token_issuer_and_claims": "pass",
+    "keycloak_discovery_with_foreign_host_header": "advertises the public URL",
+    "keycloak_secure_cookies": {
+      "with_forwarded_proto_https": "Secure; SameSite=None",
+      "without": "no Secure; SameSite=Lax; non-secure context warning"
+    },
+    "keycloak_admin_console_redirect_placeholder": {
+      "public_origin_callback": 200,
+      "foreign_callback": 400
+    },
+    "create_topics_script": "pass twice against Kafka 4.1.2 (idempotent)",
+    "otel_collector_config": "collector started with the AOT_CONFIG_CONTENT pipeline (OTLP HTTP 127.0.0.1:4318 -> awsxray)",
+    "spa_routing_function": "extensionless paths -> /index.html; assets unchanged",
+    "local_edge_end_to_end": {
+      "stand_in": "nginx routing /idp -> keycloak, /api and /actuator/health -> edge-gateway",
+      "ecs_health_check_command": "passes in erp-core and edge-gateway images",
+      "alb_readiness_path": "UP",
+      "aws_smoke_sh": "pass (health UP, issuer = public URL, unauthenticated 401, authenticated 404 RESOURCE_NOT_FOUND)",
+      "error_log_lines": 0,
+      "runs": 1
+    },
+    "keycloak_first_start_ready_seconds": "15-23 on this host (six first starts in this session; time to the first UP from :9000/health/ready, 2 s polling)"
+  },
+  "labels": {
+    "measured": "all results above (local runs on the stated host)",
+    "estimated": "costs in docs/runbooks/aws-deploy.md (public list prices, 2026-11-23)",
+    "unknown": "anything requiring an AWS account: plan/apply, IAM trust, ECS deployments, MSK/RDS/Valkey connectivity, CloudFront behavior, real cost"
+  }
+}
