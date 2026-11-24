@@ -1,0 +1,117 @@
+# AKS dev environment (deploy/terraform/azure, docs/runbooks/azure-deploy.md). Layered as:
+#   helm upgrade --install materialflow deploy/helm/materialflow -n materialflow \
+#     -f deploy/helm/materialflow/values-aks.yaml -f environment-values.yaml \
+#     --set global.imageTag=<git sha>
+# environment-values.yaml is `terraform output -raw helm_environment_values` (registry, database
+# host and user, public issuer URL, workload identity client ID); nothing in it is secret.
+#
+# Capacity: two Arm64 Standard_B2ps_v2 nodes (1.9 vCPU / ~6.6 GiB allocatable each). AKS add-ons,
+# including two istiod replicas that request 500m / 2 GiB each (and use ~50 MiB), already request
+# about 2.4 vCPU and 5.8 GiB. Requests below are therefore sized from measured idle usage plus
+# headroom (kubectl top, 2026-11-24), leaving room for one surge pod during a rolling update;
+# limits let the JVMs burst during start-up and under load.
+
+global:
+  imageTag: ""  # always set by the caller (cd-azure uses the commit SHA)
+  imagePullPolicy: IfNotPresent
+  existingSecret: materialflow-runtime
+  otelEndpoint: http://jaeger:4318/v1/traces
+  nodeSelector: {workload: app}
+  spreadAcrossNodes: true
+  preStopSleepSeconds: 10
+  # Arm64 B-series nodes start a Spring Boot JVM in 30-90 s; allow up to 5 minutes.
+  startupFailureThreshold: 60
+
+config:
+  redisHost: redis
+  kafkaBootstrapServers: kafka:9092
+  erpCoreUri: http://materialflow-erp-core:8080
+  projectionUri: http://materialflow-stream-projection:8082
+  # Issuer (public URL) comes from environment-values.yaml; signing keys are fetched in-cluster.
+  oidcJwkSetUri: http://keycloak:8080/idp/realms/materialflow/protocol/openid-connect/certs
+  securityEnabled: "true"
+  extra:
+    # General Purpose D2ds_v5 allows 859 connections; 2 x 10 (erp-core) + 2 x 6 (relay) + Keycloak.
+    MATERIALFLOW_DB_POOL_SIZE: "10"
+    # Same origin behind the Gateway: no CORS allow-list (ADR 0010).
+    MATERIALFLOW_CORS_ALLOWED_ORIGINS: ""
+
+# Passwords come from Key Vault through the Secrets Store CSI driver (SecretProviderClass
+# materialflow-runtime, installed by deploy/kubernetes/aks/platform).
+secretsStore:
+  enabled: true
+  secretProviderClass: materialflow-runtime
+
+networkPolicy:
+  enabled: true
+  extraIngress:
+    # The Gateway's Envoy pods reach the console (8080), the API gateway (8081) and Keycloak (8080).
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: materialflow-edge}
+      ports:
+        - {protocol: TCP, port: 8080}
+        - {protocol: TCP, port: 8081}
+    # Test clients on the load-generator pool may call the services directly.
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: materialflow-loadgen}
+  extraEgress:
+    # PostgreSQL Flexible Server in its delegated subnet (azurerm_subnet.postgres).
+    - to:
+        - ipBlock: {cidr: 10.42.8.0/24}
+      ports:
+        - {protocol: TCP, port: 5432}
+
+faultInjection:
+  enabled: false
+
+components:
+  erp-core:
+    port: 8080
+    replicas: 2
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 100m, memory: 512Mi}
+      limits: {cpu: "2", memory: 1Gi}
+  event-relay:
+    port: 8084
+    replicas: 2
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 25m, memory: 256Mi}
+      limits: {cpu: "1", memory: 512Mi}
+  edge-gateway:
+    port: 8081
+    replicas: 2
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 50m, memory: 320Mi}
+      limits: {cpu: "1", memory: 512Mi}
+  stream-projection:
+    port: 8082
+    replicas: 1
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 50m, memory: 384Mi}
+      limits: {cpu: "1", memory: 768Mi}
+  integration-adapter:
+    port: 8083
+    grpcPort: 9090
+    replicas: 1
+    autoscaling: {enabled: false}
+    resources:
+      requests: {cpu: 25m, memory: 256Mi}
+      limits: {cpu: "1", memory: 512Mi}
+
+adminConsole:
+  enabled: true
+  replicas: 2
+  port: 8080
+  apiBaseUrl: ""
+  # The Gateway routes /api to the API gateway directly, so nginx does not proxy it.
+  apiUpstream: ""
+  oidcClientId: materialflow-admin-console
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+    limits: {cpu: 250m, memory: 128Mi}

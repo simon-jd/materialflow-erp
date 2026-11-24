@@ -66,7 +66,15 @@ jobs:
           -v "${{ github.workspace }}/deploy/compose/prometheus:/rules:ro" -w /rules
           prom/prometheus:v3.6.0 test rules alerts.test.yml
       - name: Helm validation
-        run: helm lint deploy/helm/materialflow && helm template materialflow deploy/helm/materialflow >/tmp/materialflow.yaml
+        run: |
+          helm lint deploy/helm/materialflow && helm template materialflow deploy/helm/materialflow >/tmp/materialflow.yaml
+          # AKS overlay, including the fault-injection switch, and the AKS platform chart.
+          helm template materialflow deploy/helm/materialflow -f deploy/helm/materialflow/values-aks.yaml \
+            --set global.imageTag=ci --set faultInjection.enabled=true \
+            --set adminConsole.oidcAuthority=https://materialflow.example.test/idp/realms/materialflow >/tmp/materialflow-aks.yaml
+          helm lint deploy/kubernetes/aks/platform -f deploy/kubernetes/aks/platform/values-example.yaml
+          helm template materialflow-platform deploy/kubernetes/aks/platform \
+            -f deploy/kubernetes/aks/platform/values-example.yaml >/tmp/materialflow-platform.yaml
       - name: Build non-root images
         run: |
           for app in erp-core event-relay edge-gateway stream-projection integration-adapter; do

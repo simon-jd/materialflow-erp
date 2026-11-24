@@ -4,6 +4,13 @@ global:
   imagePullPolicy: IfNotPresent
   existingSecret: materialflow-runtime
   otelEndpoint: http://otel-collector:4318/v1/traces
+  # Pod placement for every Deployment in the chart.
+  nodeSelector: {}
+  tolerations: []
+  spreadAcrossNodes: false
+  # Seconds a terminating pod keeps serving while its endpoint is removed from Services/proxies.
+  preStopSleepSeconds: 0
+  startupFailureThreshold: 30
 
 config:
   postgresUrl: jdbc:postgresql://postgres:5432/materialflow
@@ -14,6 +21,33 @@ config:
   oidcIssuerUri: http://keycloak:8080/realms/materialflow
   oidcJwkSetUri: http://keycloak:8080/realms/materialflow/protocol/openid-connect/certs
   securityEnabled: "true"
+  # When set, the database user goes into the ConfigMap and the Secret only carries passwords.
+  dbUser: ""
+  # Extra non-secret environment variables for every service (Spring relaxed binding).
+  extra: {}
+
+serviceAccount:
+  annotations: {}
+
+# Mount a Secrets Store CSI SecretProviderClass (Azure Key Vault) into every pod. The driver
+# syncs the mounted objects into global.existingSecret, which the pods read through envFrom.
+secretsStore:
+  enabled: false
+  secretProviderClass: materialflow-runtime
+
+networkPolicy:
+  enabled: true
+  # Appended to the default-deny policy's ingress and egress rules.
+  extraIngress: []
+  extraEgress: []
+
+# Process-kill fault drills (tests/failure). Never enable on a shared environment.
+faultInjection:
+  enabled: false
+  # Pods that share one PID namespace so a drill can SIGKILL the JVM (it is not PID 1 then).
+  sharedProcessNamespace: [erp-core, event-relay]
+  # Services that run with the fault-injection Spring profile (erp-core's crash-window gate).
+  springProfile: [erp-core]
 
 components:
   erp-core:

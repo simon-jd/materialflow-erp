@@ -7,6 +7,11 @@ metadata:
 data:
   MATERIALFLOW_DB_URL: {{ .Values.config.postgresUrl | quote }}
   POSTGRES_URL: {{ .Values.config.postgresUrl | quote }}
+  {{- with .Values.config.dbUser }}
+  # Only the password comes from the Secret when the user name is set here.
+  MATERIALFLOW_DB_USER: {{ . | quote }}
+  POSTGRES_USER: {{ . | quote }}
+  {{- end }}
   MATERIALFLOW_REDIS_HOST: {{ .Values.config.redisHost | quote }}
   REDIS_HOST: {{ .Values.config.redisHost | quote }}
   MATERIALFLOW_KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.kafkaBootstrapServers | quote }}
@@ -18,3 +23,6 @@ data:
   OIDC_JWK_SET_URI: {{ .Values.config.oidcJwkSetUri | quote }}
   MATERIALFLOW_SECURITY_ENABLED: {{ .Values.config.securityEnabled | quote }}
   OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.global.otelEndpoint | quote }}
+  {{- range $key, $value := .Values.config.extra }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
