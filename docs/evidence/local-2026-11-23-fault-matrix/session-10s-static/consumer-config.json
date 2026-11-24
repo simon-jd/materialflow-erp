@@ -1,0 +1,13 @@
+{
+  "source": "erp-core ConsumerConfig log line at 2026-11-24T09:07:54.64567888Z",
+  "image": "materialflow-qualification/erp-core:fault-matrix-detect",
+  "auto.offset.reset": "earliest",
+  "enable.auto.commit": "false",
+  "group.id": "erp-core-reallocation-v1",
+  "group.instance.id": "erp-core-0-0",
+  "group.protocol": "classic",
+  "heartbeat.interval.ms": "3000",
+  "isolation.level": "read_committed",
+  "max.poll.interval.ms": "300000",
+  "session.timeout.ms": "10000"
+}

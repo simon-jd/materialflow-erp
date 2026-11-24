@@ -101,11 +101,12 @@ consumer-group rebalance. It is an observed upper bound: database probes repeat
 every 250 ms, but each committed-offset probe is a `kafka-consumer-groups.sh` call
 of roughly 2.5–3 s. Window 2's duplicate check reads `event_duplicate_total` from
 erp-core's Prometheus endpoint and is recorded as `null` on a JWT-protected stack.
-On the local stack a consumer-window run takes about a minute: erp-core restarts
-in seconds, but its classic consumer group reassigns the partition only after the
-killed member's 45 s session expires. The relay window waits for the 30 s claim
-lease. A full `--repeat 5` matrix takes about 17 minutes
-([evidence](../../docs/evidence/local-2026-11-23-fault-matrix/README.md)).
+A consumer window recovers once the restarted JVM gets its partition back, which
+the classic consumer group allows only after the killed member's session expires
+(10 s by default, see [ADR 0011](../../docs/adr/0011-consumer-failure-detection.md)).
+The relay window waits for the 30 s claim lease. Measured recovery times, before
+and after the session-timeout change, are in the
+[evidence](../../docs/evidence/local-2026-11-23-fault-matrix/README.md).
 
 If a run is interrupted outside its cleanup, inspect `pg_stat_activity` for
 `mf_qualification_*` lock holders and `pg_trigger` for matching fixtures; holders

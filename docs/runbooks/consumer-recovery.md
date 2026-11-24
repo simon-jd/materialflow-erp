@@ -6,6 +6,13 @@ is `erp-core-reallocation-v1`; consumer DLQ is the source topic plus `.DLQ`.
 The Relay's PostgreSQL `DEAD_LETTER` rows and the Streams projection DLQ are
 separate recovery paths.
 
+A killed consumer's partition is reassigned once its group session expires:
+`MATERIALFLOW_KAFKA_CONSUMER_SESSION_TIMEOUT` (default `10s`) and
+`MATERIALFLOW_KAFKA_CONSUMER_HEARTBEAT_INTERVAL` (default `3s`). Raise the timeout
+if unexpected rebalances follow GC pauses or CPU throttling. Set
+`MATERIALFLOW_KAFKA_CONSUMER_GROUP_INSTANCE_ID` only for a replica whose identity
+survives restarts and rollouts; see [ADR 0011](../adr/0011-consumer-failure-detection.md).
+
 Provision the consumer DLQ before enabling consumers, with at least as many
 partitions as the source and suitable replication/retention. Missing-DLQ recovery
 blocks progress intentionally. Configure access for the application to publish to

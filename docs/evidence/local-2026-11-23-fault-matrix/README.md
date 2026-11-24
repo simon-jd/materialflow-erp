@@ -3,8 +3,12 @@
 The repository had described a 4-window × 5-kill fault matrix for the outbox →
 Kafka → consumer-inbox path but had only run two SIGKILLs (windows 1 and 3, in
 [the September 7 qualification](../local-2026-09-07-qualification/process-kill.json)).
-This session made all four windows runnable and ran the full matrix. All data is
-synthetic and all execution is local. Labels: **measured** values come straight
+This session made all four windows runnable and ran the full matrix. The matrix
+showed that consumer recovery was bounded by Kafka's 45 s session timeout, so
+[ADR 0011](../../adr/0011-consumer-failure-detection.md) made failure detection
+configurable with a 10 s default, and the consumer windows were re-measured
+([below](#session-timeout-re-measurement-adr-0011)). All data is synthetic and all
+execution is local. Labels: **measured** values come straight
 from the retained records, **derived** values are computed from them.
 
 ## Result
@@ -59,9 +63,8 @@ The recorded `blocked_statement` confirms where each JVM was parked: the inbox
   `session.timeout.ms = 45000`, `heartbeat.interval.ms = 3000` and no
   `group.instance.id` (measured from Core's logged `ConsumerConfig`). The restarted
   consumer joins as a new member, so the coordinator reassigns the partition only
-  after the killed member's session expires. Static membership or a shorter session
-  timeout could shorten this window; neither was changed here, because both alter
-  group behaviour beyond the scope of the drill.
+  after the killed member's session expires. This led to ADR 0011 and the
+  re-measurement below: p50 45.3 s → 10.7 s with a 10 s session timeout.
 - **Relay recovery is bounded by the claim lease.** With `claim-timeout: 30s`, the
   republish happened 26.1–27.8 s after the kill. The drill reads the first broker
   record before killing, which uses part of the lease.
@@ -129,6 +132,47 @@ and 13 `RESERVE` ledger rows for the 13 reallocated fixture orders. These totals
 include the shakedown attempts. The 14th fixture order is still `BACKORDERED`
 because attempt 1 was stopped after seeding it.
 
+## Session-timeout re-measurement (ADR 0011)
+
+The same drill re-ran windows 1, 2 and 4 five times each on images built from the
+ADR 0011 change (`fault-matrix-detect` tag; event-relay JAR unchanged, erp-core JAR
+SHA-256 `729714d7…`, see [`environment-session-10s.json`](environment-session-10s.json)).
+First with the new default (10 s session timeout, 3 s heartbeat, dynamic
+membership), then with erp-core recreated through
+[`static-membership.yml`](static-membership.yml), which gives the single container a
+fixed `group.instance.id` that survives `docker start`. Each run directory has the
+effective settings as logged by Core's `ConsumerConfig` (`consumer-config.json`).
+The 20-kill matrix above is the baseline. Same host, Compose project, stack subset
+and drill code; the re-measurement ran 2026-11-24 09:03–09:12 UTC.
+
+| Window | Baseline: Kafka default 45 s | 10 s, dynamic membership | 10 s + static membership |
+|---|---:|---:|---:|
+| 1 `consumer-pre-commit` | 45.2 s (43.8–47.0) | 10.7 s (9.0–11.5) | 8.7 s (8.6–9.5) |
+| 2 `consumer-post-commit` | 45.3 s (42.4–46.0) | 7.9 s (7.8–11.4) | 7.9 s (7.9–9.9) |
+| 4 `dlq-post-ack` | 45.3 s (43.8–45.7) | 11.1 s (9.3–11.5) | 9.4 s (9.4–9.9) |
+| All 15 consumer kills, p50 | 45.3 s | 10.7 s | 9.2 s |
+| SIGKILLs (exit 137) / passed | 15 / 15 | 15 / 15 | 15 / 15 |
+| Records | [`matrix/`](matrix) | [`session-10s/`](session-10s) | [`session-10s-static/`](session-10s-static) |
+
+Cells are p50 (min–max) recovery over 5 runs: measured per run, p50 derived by
+nearest rank. Every run kept the window's invariant: one inbox row and one
+reallocation (windows 1 and 2), exactly one absorbed duplicate in the restarted JVM
+(window 2), and two DLQ records with the source offset advanced (window 4). No kill
+was an OOM kill, and container restarts took 0.23–0.39 s.
+
+The 10 s default cut consumer recovery by a factor of about 4 (derived). Recovery is
+now close to a plain restart: in the static-membership run Spring started in
+5.9–6.8 s (measured from Core's startup log lines). The 10 s dynamic run's startup
+lines were lost when Compose recreated the container for the static variant. Static
+membership removed the remaining wait for the dead member's session and narrowed
+the spread. Its p50 gain of about 1.5 s is smaller than the roughly 3 s resolution of
+the offset probes, so it is not claimed as a measured saving. Spring Kafka suffixes
+the listener container index, so the configured `erp-core-0` registered as
+`erp-core-0-0`, stable across every restart.
+[`post-run-state-session-10s.json`](post-run-state-session-10s.json) shows the
+stack clean after both variants: no fixture triggers, functions, lock holders or
+waiters, all outbox rows `PUBLISHED` and consumer-group lag 0 (60/60).
+
 ## Every attempt is kept
 
 | Attempt | Kills | Outcome | Records |
@@ -136,6 +180,8 @@ because attempt 1 was stopped after seeding it.
 | 01 shakedown, 1 × each window | 1 | Window 1 **failed**: drill defect, stopped by hand | [`attempts/01-shakedown/kills.jsonl`](attempts/01-shakedown/kills.jsonl) |
 | 02 shakedown, 1 × each window | 4 | 4/4 passed | [`attempts/02-shakedown/`](attempts/02-shakedown) |
 | Matrix, 5 × each window | 20 | 20/20 passed | [`matrix/`](matrix) |
+| 10 s session, windows 1, 2, 4 × 5 | 15 | 15/15 passed | [`session-10s/`](session-10s) |
+| 10 s session + static membership, windows 1, 2, 4 × 5 | 15 | 15/15 passed | [`session-10s-static/`](session-10s-static) |
 
 Attempt 1 read committed offsets from a long-lived `__consumer_offsets` console
 consumer. That console consumer block-buffers its output when piped, so the drill
@@ -144,7 +190,8 @@ row and the reallocation committed 42 s after the kill, and `kafka-consumer-grou
 showed the group's committed offset at 2. The watcher was replaced by direct
 `kafka-consumer-groups.sh` probes (the committed code). The run was stopped while
 window 2 was waiting, before its gate was taken, so attempt 1 has no `summary.json`.
-In total the session sent 25 SIGKILLs, all with exit code 137.
+In total 55 SIGKILLs were sent (25 in the first session, 30 in the re-measurement),
+all with exit code 137.
 
 `raw/` (git-ignored, kept locally) holds the drill's progress logs and the
 compressed erp-core and event-relay container logs.
@@ -169,14 +216,21 @@ python3 tests/failure/process-kill-recovery.py --project mf-fault-matrix \
 compose down -v
 ```
 
+For the ADR 0011 re-measurement, build `fault-matrix-detect` images from the current
+tree, set `QUALIFICATION_TAG=fault-matrix-detect` in the env file and run
+`--windows 1,2,4 --repeat 5` twice: once as above, then after
+`compose -f docs/evidence/local-2026-11-23-fault-matrix/static-membership.yml up -d
+--no-build erp-core`.
+
 ## Limits
 
 - One single-broker Kafka with one partition per topic, one erp-core consumer and
   one relay instance on one Docker host. Five runs per window give a small sample,
   and the timings come from a shared workstation. No multi-node, network-partition,
   broker-failure or production-scale claim.
-- Recovery times depend on the consumer's 45 s session timeout and the relay's 30 s
-  lease. They describe this configuration, not a recovery SLA.
+- Recovery times depend on the consumer's session timeout (45 s in the baseline,
+  10 s after ADR 0011) and the relay's 30 s lease. They describe these
+  configurations, not a recovery SLA.
 - Windows 2 and 4 rely on a test-only hook. It is profile-gated and proven inert by
   `ConsumerCrashWindowGateTest`. `DomainEventConsumerRecoveryIntegrationTest` shows
   that it runs after the side effect is durable and before the offset commit. The
