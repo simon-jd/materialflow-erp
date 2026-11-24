@@ -66,8 +66,10 @@ final class ContentionRun {
                             }
                         } catch (SQLException exception) {
                             outcome = Outcome.ERROR;
-                            errorsBySqlState.computeIfAbsent(String.valueOf(exception.getSQLState()),
-                                    state -> new LongAdder()).increment();
+                            // Pool acquisition timeouts carry no SQLState; name them by type instead.
+                            String kind = exception.getSQLState() != null
+                                    ? exception.getSQLState() : exception.getClass().getSimpleName();
+                            errorsBySqlState.computeIfAbsent(kind, state -> new LongAdder()).increment();
                         }
                         latencyNanos[index] = System.nanoTime() - started;
                         outcomes[index] = outcome;
