@@ -1,0 +1,155 @@
+{
+  "host": {
+    "machine": "Apple Silicon MacBook (arm64), macOS Darwin 27.0.0, 12 CPUs, 36 GiB",
+    "docker": "Docker Desktop 29.8.0, 12 CPUs / 12.5 GB shared with three other agents"
+  },
+  "java": "OpenJDK 21.0.13.1 (Homebrew)",
+  "harness": {
+    "postgres": {
+      "SELECT version()": "PostgreSQL 17.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "SHOW fsync": "on",
+      "SHOW synchronous_commit": "on",
+      "SHOW default_transaction_isolation": "read committed",
+      "SHOW max_connections": "100",
+      "SHOW shared_buffers": "128MB"
+    },
+    "postgresImage": "postgres:17.11-alpine",
+    "jdbcDriver": "PostgreSQL JDBC Driver 42.7.12",
+    "hikaricp": "7.0.2 (Spring Boot 4.0.8 managed)",
+    "testcontainers": "2.0.5",
+    "configuration": {
+      "requestsPerRun": 4000,
+      "measuredRepetitions": 3,
+      "warmUpRunsPerStrategyAndWorkload": 1,
+      "workers": [
+        8,
+        32,
+        64,
+        128
+      ],
+      "workerModel": "one virtual thread per worker, closed loop, no think time",
+      "hikariMaximumPoolSize": 20,
+      "hikariConnectionTimeoutMs": 3000,
+      "quantityPerRequest": "uniform 1..5",
+      "stockPerSku": "floor(demand on that SKU / 2)",
+      "seed": 20261123,
+      "optimisticRetry": {
+        "maxAttempts": 10,
+        "backoff": "full jitter, base 2 ms doubling to 100 ms cap"
+      },
+      "strategyOrder": "rotated by one position per repetition"
+    },
+    "invocations": [
+      {
+        "name": "harness-1",
+        "started_utc": "2026-11-24T08:06:11Z",
+        "completed_utc": "2026-11-24T08:12:53Z",
+        "host_load_average_1m": [
+          14.24,
+          179.59
+        ],
+        "containers_seen": [
+          "apache/kafka:4.1.2 (focused_swirles)",
+          "apache/kafka:4.1.2 (laughing_mcclintock)",
+          "apache/kafka:4.1.2 (mf-fault-matrix-kafka-probe)",
+          "postgres:17.11-alpine (elated_swanson)",
+          "postgres:17.11-alpine (festive_mendel)",
+          "postgres:17.11-alpine (hopeful_shaw)",
+          "postgres:17.11-alpine (jolly_panini)",
+          "postgres:17.11-alpine (stupefied_elgamal)"
+        ]
+      },
+      {
+        "name": "harness-2",
+        "started_utc": "2026-11-24T08:46:14Z",
+        "completed_utc": "2026-11-24T08:50:03Z",
+        "host_load_average_1m": [
+          8.66,
+          11.4
+        ],
+        "containers_seen": [
+          "apache/kafka:4.1.2 (hardcore_shtern)",
+          "apache/kafka:4.1.2 (stupefied_mahavira)",
+          "hashicorp/terraform:1.17.2 (hopeful_chebyshev)",
+          "materialflow-awscd/keycloak:repo-realm (mf-awscd-kc)",
+          "postgres:17.11-alpine (awesome_colden)",
+          "postgres:17.11-alpine (boring_jennings)",
+          "postgres:17.11-alpine (lucid_ganguly)",
+          "postgres:17.11-alpine (mf-awscd-pg)"
+        ]
+      }
+    ],
+    "containers_seen_note": "Sampled every 30 s with docker ps; excludes Ryuk. One unnamed postgres:17.11-alpine in each list is the harness database itself (elated_swanson in harness-1); the rest belong to other agents' Testcontainers runs and stacks on the same Docker host."
+  },
+  "http": {
+    "jmeter": "Apache JMeter 5.6.3, official archive, SHA-512 5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17093e522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083 verified against apache-jmeter-5.6.3.tgz.sha512",
+    "compose_project": "mf-inventory-concurrency",
+    "image_tag": "inventory-concurrency",
+    "compose_files": [
+      "deploy/compose/compose.yml",
+      "deploy/compose/qualification.yml"
+    ],
+    "env_file": "copy of deploy/compose/qualification.env with every 2xxxx port moved to 3xxxx",
+    "app_limits": "2 CPU / 1 GiB per application container",
+    "supporting_images": [
+      "postgres:17.11-alpine",
+      "redis:8.2.1-alpine",
+      "apache/kafka:4.1.2",
+      "quay.io/keycloak/keycloak:26.3.3",
+      "jaegertracing/jaeger:2.10.0",
+      "otel/opentelemetry-collector-contrib:0.135.0",
+      "prom/prometheus:v3.6.0",
+      "grafana/grafana:12.2.0"
+    ],
+    "application_images": {
+      "erp-core": "sha256:5c5be86a893c",
+      "edge-gateway": "sha256:efa243a71f24",
+      "event-relay": "sha256:94c0e2cd9baa",
+      "stream-projection": "sha256:1072664812cb",
+      "integration-adapter": "sha256:2794bd9649d4"
+    },
+    "jar_sha256": {
+      "erp-core": "b74ed8267248b0be7cb4b10f54a65f35b2a6c25e18aca3195a45ceb30dc78049",
+      "edge-gateway": "032799ddd94199649ee05492c0df546247dca346f8743a182a7478510cde0955",
+      "event-relay": "0014f41f05520dc0efa8d7408c0142af7e427b4b6bf1b7bbadf504f3074867ad",
+      "stream-projection": "2c7875c3603799838b883ded5940975151f295c693f4c6f79ed0330a78353326",
+      "integration-adapter": "0b5786fda3d05ee801d79655fb3dbd05631d1dcd80f0b51e448b371169c58a38"
+    },
+    "running_jar_matches_built_jar": {
+      "erp-core": true,
+      "edge-gateway": true
+    },
+    "postgres_counters_after_all_http_runs": {
+      "deadlocks": 0,
+      "xact_rollback": 5,
+      "xact_commit": 18030
+    },
+    "gateway_runs": {
+      "started_utc": "2026-11-24T08:43:46Z",
+      "host_load_average_1m": [
+        10.06,
+        16.03
+      ],
+      "other_containers_seen": [
+        "apache/kafka:4.1.2 (dazzling_cohen)",
+        "materialflow-awscd/keycloak:admin-console-realm (mf-awscd-kc)",
+        "postgres:17.11-alpine (compassionate_neumann)",
+        "postgres:17.11-alpine (mf-awscd-pg)",
+        "postgres:17.11-alpine (sleepy_lovelace)"
+      ]
+    },
+    "core_runs": {
+      "started_utc": "2026-11-24T08:45:05Z",
+      "host_load_average_1m": [
+        15.9,
+        17.37
+      ],
+      "other_containers_seen": [
+        "materialflow-awscd/keycloak:admin-console-realm (mf-awscd-kc)",
+        "postgres:17.11-alpine (mf-awscd-pg)",
+        "postgres:17.11-alpine (xenodochial_ardinghelli)"
+      ]
+    },
+    "containers_seen_note": "Sampled every 5 s with docker ps; excludes this project and Ryuk; all belong to other agents."
+  }
+}

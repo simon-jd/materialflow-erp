@@ -1,0 +1,155 @@
+{
+  "runs": [
+    {
+      "run": 1,
+      "samples": 500,
+      "successes": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 3272,
+      "first_sample_ms": 1795509915964,
+      "last_completion_ms": 1795509919236,
+      "p50_ms": 340,
+      "p95_ms": 576,
+      "p99_ms": 674,
+      "throughput_rps": 152.8117359413203,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0,
+      "waves": [
+        {
+          "label": "POST order wave 0",
+          "samples": 100,
+          "span_ms": 603
+        },
+        {
+          "label": "POST order wave 1",
+          "samples": 100,
+          "span_ms": 766
+        },
+        {
+          "label": "POST order wave 2",
+          "samples": 100,
+          "span_ms": 694
+        },
+        {
+          "label": "POST order wave 3",
+          "samples": 100,
+          "span_ms": 649
+        },
+        {
+          "label": "POST order wave 4",
+          "samples": 100,
+          "span_ms": 554
+        }
+      ],
+      "burst_throughput_rps": 153.09246785058176,
+      "status_codes": {
+        "201": 500
+      }
+    },
+    {
+      "run": 2,
+      "samples": 500,
+      "successes": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 1992,
+      "first_sample_ms": 1795509922668,
+      "last_completion_ms": 1795509924660,
+      "p50_ms": 220,
+      "p95_ms": 370,
+      "p99_ms": 410,
+      "throughput_rps": 251.00401606425703,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0,
+      "waves": [
+        {
+          "label": "POST order wave 0",
+          "samples": 100,
+          "span_ms": 425
+        },
+        {
+          "label": "POST order wave 1",
+          "samples": 100,
+          "span_ms": 428
+        },
+        {
+          "label": "POST order wave 2",
+          "samples": 100,
+          "span_ms": 438
+        },
+        {
+          "label": "POST order wave 3",
+          "samples": 100,
+          "span_ms": 402
+        },
+        {
+          "label": "POST order wave 4",
+          "samples": 100,
+          "span_ms": 293
+        }
+      ],
+      "burst_throughput_rps": 251.76233635448136,
+      "status_codes": {
+        "201": 500
+      }
+    },
+    {
+      "run": 3,
+      "samples": 500,
+      "successes": 500,
+      "errors": 0,
+      "timeouts": 0,
+      "duration_ms": 2630,
+      "first_sample_ms": 1795509928014,
+      "last_completion_ms": 1795509930644,
+      "p50_ms": 277,
+      "p95_ms": 508,
+      "p99_ms": 559,
+      "throughput_rps": 190.11406844106463,
+      "error_rate_percent": 0.0,
+      "timeout_rate_percent": 0.0,
+      "waves": [
+        {
+          "label": "POST order wave 0",
+          "samples": 100,
+          "span_ms": 520
+        },
+        {
+          "label": "POST order wave 1",
+          "samples": 100,
+          "span_ms": 623
+        },
+        {
+          "label": "POST order wave 2",
+          "samples": 100,
+          "span_ms": 612
+        },
+        {
+          "label": "POST order wave 3",
+          "samples": 100,
+          "span_ms": 484
+        },
+        {
+          "label": "POST order wave 4",
+          "samples": 100,
+          "span_ms": 384
+        }
+      ],
+      "burst_throughput_rps": 190.62142584826535,
+      "status_codes": {
+        "201": 500
+      }
+    }
+  ],
+  "aggregate": {
+    "samples": 1500,
+    "errors": 0,
+    "p50_ms": 277,
+    "p95_ms": 508,
+    "p99_ms": 559,
+    "throughput_rps": 190.01773498859893,
+    "error_rate_percent": 0.0,
+    "timeout_rate_percent": 0.0
+  }
+}
