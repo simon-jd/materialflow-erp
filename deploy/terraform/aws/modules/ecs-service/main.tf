@@ -115,9 +115,9 @@ data "aws_iam_policy_document" "execution" {
   }
 
   statement {
-    sid       = "PullOwnImage"
+    sid       = "PullOwnImages"
     actions   = ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
-    resources = [var.ecr_repository_arn]
+    resources = var.ecr_repository_arns
   }
 
   statement {

@@ -28,9 +28,9 @@ variable "image" {
   type        = string
 }
 
-variable "ecr_repository_arn" {
-  description = "ECR repository the execution role may pull from."
-  type        = string
+variable "ecr_repository_arns" {
+  description = "Private ECR repositories the execution role may pull from (the application's, plus any init container image)."
+  type        = list(string)
 }
 
 variable "cpu" {

@@ -135,6 +135,8 @@ locals {
       })
       secrets     = {}
       secret_arns = []
+      # The init container's image is our kafka-tools mirror.
+      extra_repositories = ["kafka-tools"]
       # Same idempotent topic creation as Compose's kafka-init: Streams must not start against a
       # missing source topic (see docs/runbooks/runtime-qualification.md).
       init_container = {
@@ -201,14 +203,14 @@ module "service" {
   memory        = try(var.service_overrides[each.key].memory, null) == null ? each.value.memory : var.service_overrides[each.key].memory
   desired_count = try(var.service_overrides[each.key].desired_count, null) == null ? 1 : var.service_overrides[each.key].desired_count
 
-  ecr_repository_arn = module.ecr.repository_arns[each.key]
-  container_port     = each.value.port
-  environment        = each.value.environment
-  secrets            = each.value.secrets
-  secret_arns        = each.value.secret_arns
-  init_container     = each.value.init_container
-  load_balancer      = each.value.load_balancer
-  kms_key_arn        = aws_kms_key.main.arn
+  ecr_repository_arns = [for repository in concat([each.key], try(each.value.extra_repositories, [])) : module.ecr.repository_arns[repository]]
+  container_port      = each.value.port
+  environment         = each.value.environment
+  secrets             = each.value.secrets
+  secret_arns         = each.value.secret_arns
+  init_container      = each.value.init_container
+  load_balancer       = each.value.load_balancer
+  kms_key_arn         = aws_kms_key.main.arn
 
   # The alpine runtime image ships BusyBox wget; liveness excludes dependencies by design so a
   # Kafka or Redis outage does not make ECS restart every task.
@@ -238,7 +240,7 @@ module "keycloak" {
   memory        = try(var.service_overrides["keycloak"].memory, null) == null ? 2048 : var.service_overrides["keycloak"].memory
   desired_count = 1 # cache=local in the image: a single instance by design
 
-  ecr_repository_arn  = module.ecr.repository_arns["keycloak"]
+  ecr_repository_arns = [module.ecr.repository_arns["keycloak"]]
   container_port      = 8080
   extra_port_mappings = [{ name = "management", port = 9000, app_protocol = "http" }]
   environment = {

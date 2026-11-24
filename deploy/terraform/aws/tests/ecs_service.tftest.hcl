@@ -18,7 +18,7 @@ variables {
   account_id                    = "123456789012"
   cluster_arn                   = "arn:aws:ecs:us-east-1:123456789012:cluster/materialflow-dev"
   image                         = "123456789012.dkr.ecr.us-east-1.amazonaws.com/materialflow-dev/erp-core:0123abc"
-  ecr_repository_arn            = "arn:aws:ecr:us-east-1:123456789012:repository/materialflow-dev/erp-core"
+  ecr_repository_arns           = ["arn:aws:ecr:us-east-1:123456789012:repository/materialflow-dev/erp-core"]
   cpu                           = 1024
   memory                        = 2048
   desired_count                 = 1
