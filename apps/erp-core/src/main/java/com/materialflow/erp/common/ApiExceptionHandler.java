@@ -13,8 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -36,6 +39,27 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ApiError> constraint(ConstraintViolationException exception) {
         return response(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed", Map.of());
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    ResponseEntity<ApiError> parameterValidation(HandlerMethodValidationException exception) {
+        Map<String, String> fields = new LinkedHashMap<>();
+        exception.getParameterValidationResults().forEach(result -> result.getResolvableErrors()
+                .forEach(error -> fields.putIfAbsent(result.getMethodParameter().getParameterName(),
+                        error.getDefaultMessage())));
+        return response(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed", fields);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiError> typeMismatch(MethodArgumentTypeMismatchException exception) {
+        return response(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed",
+                Map.of(exception.getName(), "has an invalid value"));
+    }
+
+    @ExceptionHandler(ServletRequestBindingException.class)
+    ResponseEntity<ApiError> binding(ServletRequestBindingException exception) {
+        return response(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "A required request header or parameter is missing",
+                Map.of());
     }
 
     @ExceptionHandler({AccessDeniedException.class, ActorContext.AccessDeniedException.class})
