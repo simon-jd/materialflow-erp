@@ -6,6 +6,9 @@ transaction. Windows 2 and 4 have no database write between the side effect and 
 offset commit, so erp-core must run with the `fault-injection` profile, whose
 ConsumerCrashWindowGate waits on the drill's advisory lock when a record carries the
 window's header (see apps/erp-core/.../events/AdvisoryLockCrashWindowGate.java).
+
+The windows only talk to the `Stack` interface, so they run unchanged against Compose and
+Kubernetes. With several replicas the backend kills the instance that is actually parked.
 """
 import datetime
 import json
@@ -14,7 +17,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Callable
 
-from .stack import DLQ_TOPIC, DOMAIN_TOPIC, eventually, utc_now
+from .stack import DLQ_TOPIC, DOMAIN_TOPIC, counter_increase, eventually, utc_now
 
 ORGANIZATION = '11111111-1111-1111-1111-111111111111'
 WAREHOUSE = '22222222-2222-2222-2222-222222222222'
@@ -26,6 +29,7 @@ WAREHOUSE_USER = '66666666-6666-6666-6666-666666666603'
 QUANTITY = 10
 AFTER_INBOX_COMMIT_HEADER = 'materialflow-crash-gate-after-inbox-commit'
 AFTER_DEAD_LETTER_SEND_HEADER = 'materialflow-crash-gate-after-dead-letter-send'
+DUPLICATE_COUNTER = 'event_duplicate_total'
 
 
 @dataclass(frozen=True)
@@ -146,30 +150,35 @@ def kill_while_parked(stack, record, service, gate, inject, check_parked):
     """Inject, wait until `service` is parked on `gate`, SIGKILL it, then release and restart.
 
     Returns the monotonic kill time. Only a fast database check sits between the kill and
-    the restart, so recovery times are not inflated by drill-side Kafka reads.
+    the restart, so recovery times are not inflated by drill-side Kafka reads. The Compose
+    backend restarts the container here (`restart_ms`); on Kubernetes the kubelet restarts it
+    concurrently and `stack.settle` records when it was running and Ready again.
     """
     process = None
     try:
         inject()
         record['blocked_statement'] = ' '.join(stack.wait_blocked(gate).split())
         record['at_kill'] = check_parked(before_kill=True)
-        process = stack.kill(service)
+        process = stack.kill(service, record.get('event_id'))
         killed = time.monotonic()
+        stack.forget_group_owner()  # Only an owner seen after the kill says who recovered.
         record.update(killed_at=utc_now(), process=process)
         check_parked(before_kill=False)
     finally:
         stack.release(gate)
         if process:
-            stack.restart(service, process)
-            record['restart_ms'] = ms_since(killed)
+            record['restart_ms'] = stack.restart(service, process, killed)
     return killed
 
 
-def recovered(record, killed, probe, description, timeout=120):
+def recovered(stack, record, killed, probe, description, timeout=120):
     """Wait for the window's invariant and record kill -> invariant-restored time."""
     value = eventually(probe, description, timeout)
     record['recovery_ms'] = ms_since(killed)
-    record['restart_to_recovered_ms'] = record['recovery_ms'] - record['restart_ms']
+    if stack.last_group_owner():
+        record['recovered_owner_host'] = stack.last_group_owner()
+    if record.get('restart_ms') is not None:
+        record['restart_to_recovered_ms'] = record['recovery_ms'] - record['restart_ms']
     return value
 
 
@@ -197,7 +206,7 @@ def consumer_pre_commit(stack, record):
             if observation['committed_offset'] is not None:
                 return observation
         return None
-    record['after_recovery'] = recovered(record, killed, restored, 'retained record committed once after restart')
+    record['after_recovery'] = recovered(stack, record, killed, restored, 'retained record committed once after restart')
     # A second delivery of the same event_id must be absorbed by the inbox key.
     stack.publish(DOMAIN_TOPIC, backorder.purchase_order_id, backorder.event(event_id))
     record['replay_offset_committed'] = wait_consumer_idle(stack)
@@ -205,10 +214,25 @@ def consumer_pre_commit(stack, record):
     assert replay['inbox_rows'] == 1 and business_applied(replay, 1), replay
 
 
+def absorbed_duplicates(stack, before, timeout=60):
+    """How often erp-core counted the redelivered record as a duplicate absorbed by the inbox key,
+    summed over its JVMs: the restarted one (Compose, one replica) or the surviving replica
+    (Kubernetes, which may also see it twice if a rebalance interrupts the offset commit). None
+    when the stack does not expose metrics to the drill."""
+    if before is None:
+        return None
+
+    def probe():
+        increase = counter_increase(before, stack.erp_core_counters(DUPLICATE_COUNTER))
+        return increase if increase is not None and increase >= 1 else None
+    return eventually(probe, 'redelivery counted as a duplicate by an erp-core JVM', timeout, interval=1)
+
+
 def consumer_post_commit(stack, record):
     backorder = Backorder.seed(stack)
     event_id = record['event_id'] = str(uuid.uuid4())
     record_offset = record['record_offset'] = wait_consumer_idle(stack)
+    counters_before = stack.erp_core_counters(DUPLICATE_COUNTER)
     gate = stack.gate()
 
     def check_parked(before_kill):
@@ -222,14 +246,13 @@ def consumer_post_commit(stack, record):
     killed = kill_while_parked(stack, record, 'erp-core', gate, lambda: stack.publish(
         DOMAIN_TOPIC, backorder.purchase_order_id, backorder.event(event_id),
         headers={AFTER_INBOX_COMMIT_HEADER: gate.key}), check_parked)
-    committed = recovered(record, killed, lambda: stack.committed_past(record_offset),
+    committed = recovered(stack, record, killed, lambda: stack.committed_past(record_offset),
                           'redelivered record acknowledged after restart')
     observation = record['after_recovery'] = backorder.observe(stack, event_id)
     observation['committed_offset'] = committed
-    # The restarted JVM counts the redelivery it absorbed through the inbox key.
-    observation['duplicates_seen_by_new_jvm'] = stack.erp_core_counter('event_duplicate_total')
+    observation['duplicates_absorbed'] = absorbed_duplicates(stack, counters_before)
     assert observation['inbox_rows'] == 1 and business_applied(observation, 1), observation
-    assert observation['duplicates_seen_by_new_jvm'] in (None, 1), observation
+    assert observation['duplicates_absorbed'] is None or observation['duplicates_absorbed'] >= 1, observation
 
 
 def relay_post_ack(stack, record):
@@ -247,24 +270,29 @@ def relay_post_ack(stack, record):
                   f"'{event_id}', '{payload}'::jsonb, 'fault-matrix', '{event_id}', CURRENT_TIMESTAMP)")
 
     def check_parked(before_kill):
-        row = stack.sql(f"SELECT status, attempt_count FROM outbox_events WHERE id = '{event_id}'").split('|')
+        row = stack.sql(f"SELECT status, attempt_count, claimed_at FROM outbox_events WHERE id = '{event_id}'").split('|')
         observation = dict(status=row[0], attempt_count=int(row[1]))
         assert observation == dict(status='CLAIMED', attempt_count=1), observation
         if before_kill:
+            observation['claimed_at'] = row[2]  # The 30 s lease runs from here, not from the kill.
             observation['broker_records'] = [r[0] for r in stack.records(topic, 0, stack.end_offset(topic))]
             assert observation['broker_records'] == [0], observation
         return observation
 
     killed = kill_while_parked(stack, record, 'event-relay', gate, inject, check_parked)
-    recovered(record, killed, lambda: stack.sql(f"SELECT status FROM outbox_events WHERE id = '{event_id}'")
+    recovered(stack, record, killed, lambda: stack.sql(f"SELECT status FROM outbox_events WHERE id = '{event_id}'")
               == 'PUBLISHED' or None, 'expired claim republished after restart')
-    row = stack.sql(f"SELECT status, attempt_count FROM outbox_events WHERE id = '{event_id}'").split('|')
+    row = stack.sql(f"SELECT status, attempt_count, published_at, round(extract(epoch FROM published_at - "
+                    f"'{record['at_kill']['claimed_at']}'::timestamptz) * 1000) FROM outbox_events "
+                    f"WHERE id = '{event_id}'").split('|')
     records = stack.records(topic, 0, stack.end_offset(topic))
     observation = record['after_recovery'] = dict(
         status=row[0], attempt_count=int(row[1]), broker_records=[r[0] for r in records],
         same_event_id=all(json.loads(r[2])['eventId'] == event_id for r in records))
     assert observation == dict(status='PUBLISHED', attempt_count=2, broker_records=[0, 1],
                                same_event_id=True), observation
+    # Database clock: first claim -> republished, i.e. how much of the lease the recovery waited out.
+    observation.update(published_at=row[2], claim_to_republished_ms=int(float(row[3])))
 
 
 def dlq_post_ack(stack, record):
@@ -293,7 +321,7 @@ def dlq_post_ack(stack, record):
     killed = kill_while_parked(stack, record, 'erp-core', gate, lambda: stack.publish(
         DOMAIN_TOPIC, event_id, envelope(event_id, 'InventoryReceived', event_id, organization_id=None),
         headers={AFTER_DEAD_LETTER_SEND_HEADER: gate.key}), check_parked)
-    committed = recovered(record, killed, lambda: stack.committed_past(record_offset),
+    committed = recovered(stack, record, killed, lambda: stack.committed_past(record_offset),
                           'source offset advanced past the invalid record after restart')
     observation = record['after_recovery'] = dict(committed_offset=committed, dlq_offsets=dead_letters(),
                                                   inbox_rows=inbox_rows())

@@ -37,8 +37,8 @@ spec:
       shareProcessNamespace: true
       {{- end }}
       # Deployments only allow Always. A killed container is restarted immediately the first time;
-      # the kubelet's crash back-off (10 s doubling to 300 s, reset after 10 min without a restart)
-      # delays later restarts that come sooner than the current back-off after the previous one.
+      # after that the kubelet waits until the crash back-off (10 s doubling to 300 s) has passed
+      # since the container exited, however long it ran; it resets after 10 min between two exits.
       restartPolicy: Always
       securityContext:
         runAsNonRoot: true
