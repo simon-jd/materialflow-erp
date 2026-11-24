@@ -16,6 +16,7 @@ case ${target} in
 esac
 keycloak_port=${MATERIALFLOW_KEYCLOAK_PORT:-28180}
 runs=${MATERIALFLOW_HOT_SKU_RUNS:-3}
+warmup_runs=${MATERIALFLOW_HOT_SKU_WARMUP_RUNS:-1}
 threads=${MATERIALFLOW_HOT_SKU_THREADS:-100}
 waves=${MATERIALFLOW_HOT_SKU_WAVES:-5}
 duplicates=${MATERIALFLOW_HOT_SKU_DUPLICATES:-10}
@@ -118,47 +119,57 @@ sample_host() {
 
 {
   printf 'started_utc=%s\n' "$(date -u +%FT%TZ)"
-  printf 'target=%s port=%s runs=%s threads=%s waves=%s duplicates=%s customers=%s quantity=%s stock=%s pause_ms=%s\n' \
-    "${target}" "${target_port}" "${runs}" "${threads}" "${waves}" "${duplicates}" "${customers}" \
-    "${quantity}" "${stock}" "${pause_ms}"
+  printf 'target=%s port=%s warmup_runs=%s runs=%s threads=%s waves=%s duplicates=%s customers=%s quantity=%s stock=%s pause_ms=%s\n' \
+    "${target}" "${target_port}" "${warmup_runs}" "${runs}" "${threads}" "${waves}" "${duplicates}" \
+    "${customers}" "${quantity}" "${stock}" "${pause_ms}"
   uname -a
   java -version 2>&1
-  "${jmeter}" --version 2>&1 | grep -E '^ *[0-9]|Copyright' || true
+  printf 'jmeter=%s\n' "$("${jmeter}" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+$' | head -1)"
   docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}'
   docker ps --filter "label=com.docker.compose.project=${compose_project}" --format '{{.Names}} {{.Image}} {{.ID}}'
 } >"${results_dir}/environment.txt"
 seed_customers
 
-expected_orders=$(( (threads - duplicates) * waves ))
-for run in $(seq 1 "${runs}"); do
+# One run: fresh SKU and token, JMeter, JTL summary, SQL invariants. Files are prefixed with $1.
+run_once() {
+  local name=$1 material location key_prefix
   material=$(uuidgen | tr '[:upper:]' '[:lower:]')
   location=$(uuidgen | tr '[:upper:]' '[:lower:]')
-  key_prefix="hot-sku-$(date -u +%Y%m%dT%H%M%S)-${run}"
+  key_prefix="hot-sku-$(date -u +%Y%m%dT%H%M%S)-${name}"
   seed_sku "${material}" "${location}" "HOT-${key_prefix}"
   get_token
-  printf 'run=%s material=%s key_prefix=%s started=%s\n' "${run}" "${material}" "${key_prefix}" "$(date -u +%FT%TZ)"
+  printf '%s material=%s key_prefix=%s started=%s\n' "${name}" "${material}" "${key_prefix}" "$(date -u +%FT%TZ)"
 
-  sample_host >"${results_dir}/run-${run}-host-samples.txt" 2>&1 &
+  sample_host >"${results_dir}/${name}-host-samples.txt" 2>&1 &
   sampler_pid=$!
   "${jmeter}" -n -t "${project_root}/tests/performance/hot-sku-orders.jmx" \
     -Jhost=localhost -Jport="${target_port}" -Jthreads="${threads}" -Jwaves="${waves}" \
     -Jduplicates="${duplicates}" -Jcustomers="${customers}" -Jcustomer_prefix="${customer_prefix}" \
     -Jquantity="${quantity}" -Jmaterial_id="${material}" -Jlocation_id="${location}" \
     -Jkey_prefix="${key_prefix}" -Jpause_ms="${pause_ms}" -Jtoken_file="${token_file}" \
-    -l "${results_dir}/run-${run}.jtl" -j "${results_dir}/run-${run}-jmeter.log" >/dev/null
+    -l "${results_dir}/${name}.jtl" -j "${results_dir}/${name}-jmeter.log" >/dev/null 2>&1
   kill "${sampler_pid}" 2>/dev/null || true
   wait "${sampler_pid}" 2>/dev/null || true
   sampler_pid=
 
-  python3 "${project_root}/tests/performance/summarize_hot_sku.py" "${run}" "${results_dir}/run-${run}.jtl" \
-    >"${results_dir}/run-${run}-summary.json"
+  python3 "${project_root}/tests/performance/summarize_hot_sku.py" "${name##*-}" "${results_dir}/${name}.jtl" \
+    >"${results_dir}/${name}-summary.json"
   psql -v material_id="${material}" -v key_prefix="${key_prefix}" -v expected_orders="${expected_orders}" \
-    <"${project_root}/tests/performance/hot-sku-invariants.sql" | jq . >"${results_dir}/run-${run}-invariants.json"
-  gzip -9 "${results_dir}/run-${run}.jtl"
-  jq -c '{run: .run, samples, errors, p50_ms, p95_ms, p99_ms, throughput_rps, burst_throughput_rps}' \
-    "${results_dir}/run-${run}-summary.json"
+    <"${project_root}/tests/performance/hot-sku-invariants.sql" | jq . >"${results_dir}/${name}-invariants.json"
+  gzip -9 "${results_dir}/${name}.jtl"
+  jq -c '{samples, errors, status_codes, p50_ms, p95_ms, p99_ms, throughput_rps, burst_throughput_rps}' \
+    "${results_dir}/${name}-summary.json"
   jq -c '{holds, metrics: .metrics | {on_hand, reserved, orders, status_counts}}' \
-    "${results_dir}/run-${run}-invariants.json"
+    "${results_dir}/${name}-invariants.json"
+}
+
+expected_orders=$(( (threads - duplicates) * waves ))
+# Warm-up runs absorb JIT, connection-pool and Redis client start-up; they are kept but not gated.
+for (( warmup = 1; warmup <= warmup_runs; warmup++ )); do
+  run_once "warmup-${warmup}"
+done
+for (( run = 1; run <= runs; run++ )); do
+  run_once "run-${run}"
 done
 
 python3 "${project_root}/tests/performance/summarize_jtl.py" aggregate \

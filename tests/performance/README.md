@@ -75,8 +75,10 @@ MATERIALFLOW_HOT_SKU_TARGET=core MATERIALFLOW_HOT_SKU_PAUSE_MS=0 \
 principal 50 requests/s with a burst of 100, so waves are capped at 100 and paused
 2 s; `burst_throughput_rps` excludes those pauses. `core` sends the same JWT straight
 to erp-core's resource server, bypassing the limiter, without pauses. Settings are
-`MATERIALFLOW_HOT_SKU_{RUNS,THREADS,WAVES,DUPLICATES,CUSTOMERS,QUANTITY,STOCK,PAUSE_MS}`.
-The script exits nonzero on any non-201 response or failed invariant.
+`MATERIALFLOW_HOT_SKU_{WARMUP_RUNS,RUNS,THREADS,WAVES,DUPLICATES,CUSTOMERS,QUANTITY,STOCK,PAUSE_MS}`
+(defaults 1, 3, 100, 5, 10, 50, 7, 1000, 2000). Warm-up runs are recorded but not
+gated: a cold gateway can fail closed with 503 while its Redis client warms up. The
+script exits nonzero on any non-201 response or failed invariant in a measured run.
 
 ## Python helpers
 

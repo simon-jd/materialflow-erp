@@ -21,7 +21,7 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST order wave ${__jm__HotSkuSubmitters__idx}">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST order">
           <stringProp name="HTTPSampler.domain">${__P(host,localhost)}</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port,8081)}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
@@ -40,12 +40,13 @@
 int threads = props.getProperty('threads', '100') as int
 int duplicates = props.getProperty('duplicates', '0') as int
 int customers = props.getProperty('customers', '50') as int
-int wave = vars.get('__jm__HotSkuSubmitters__idx') as int
+int wave = vars.getIteration() - 1
 int distinct = threads - duplicates
 int thread = ctx.getThreadNum()
 int order = wave * distinct + (thread &lt; distinct ? thread : thread - distinct)
 vars.put('orderKey', props.getProperty('key_prefix') + '-' + order)
-vars.put('customerId', props.getProperty('customer_prefix') + String.format('%012d', order % customers))</stringProp>
+vars.put('customerId', props.getProperty('customer_prefix') + String.format('%012d', order % customers))
+sampler.setName('POST order wave ' + wave)</stringProp>
           </JSR223PreProcessor>
           <hashTree/>
           <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Release each wave together">
