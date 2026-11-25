@@ -158,8 +158,14 @@ mkdir -p ~/materialflow-azure/state && chmod 700 ~/materialflow-azure ~/material
    (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AKS_RESOURCE_GROUP`,
    `AKS_CLUSTER_NAME`, `ACR_NAME`, `MATERIALFLOW_PUBLIC_URL`, `AKS_HELM_VALUES`). None is secret.
    `AZURE_CLIENT_ID` must be a repository variable: the job-level gate reads it before any
-   environment is entered. The federated credential trusts exactly
-   `repo:simon-jd/materialflow-erp:environment:azure-dev` (`terraform output github_oidc_subject`).
+   environment is entered. The federated credential trusts exactly the subject in
+   `terraform output github_oidc_subject`. This repository uses GitHub's immutable OIDC subjects
+   (`gh api repos/simon-jd/materialflow-erp/actions/oidc/customization/sub` shows
+   `use_immutable_subject: true`), so the subject carries the numeric owner and repository IDs:
+   `repo:simon-jd@276495489/materialflow-erp@1368743399:environment:azure-dev`. Set
+   `github_repository_ids = null` for a repository that uses the classic subject.
+   To pause deployments (for example while the cluster is stopped), delete only `AZURE_CLIENT_ID`;
+   pushes then skip the workflow.
 
 ## Deploy (every push to main)
 
@@ -170,7 +176,9 @@ application chart with `--rollback-on-failure` (Helm 4's name for `--atomic`), t
 `tests/deployment/aws-smoke.sh` against the public URL (gateway health, Keycloak token whose
 issuer is the public URL, 401 without a token, 404 `RESOURCE_NOT_FOUND` with one, console deep
 link and `config.js`). The deploy identity can write ordinary objects in `materialflow` only; the
-platform chart, Gateway and certificates are an operator change.
+platform chart, Gateway and certificates are an operator change. Deployments roll one pod at a time
+without surge (`global.rollingUpdate` in `values-aks.yaml`), because the app nodes have no
+requestable room for a surge pod per Deployment; a two-replica service keeps one ready pod.
 
 Rollback of a healthy but wrong release: `helm -n materialflow rollback materialflow <revision>`.
 
