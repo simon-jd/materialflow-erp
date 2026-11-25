@@ -37,6 +37,22 @@ variable "github_repository" {
   default     = "simon-jd/materialflow-erp"
 }
 
+variable "github_repository_ids" {
+  description = <<-EOT
+    Numeric owner and repository IDs, needed when the repository uses immutable OIDC subjects
+    (gh api repos/OWNER/REPO/actions/oidc/customization/sub shows use_immutable_subject).
+    null keeps the classic subject repo:OWNER/REPO:environment:ENV.
+  EOT
+  type = object({
+    owner_id      = number
+    repository_id = number
+  })
+  default = {
+    owner_id      = 276495489
+    repository_id = 1368743399
+  }
+}
+
 variable "github_environment" {
   description = "GitHub Actions environment the deploy identity trusts."
   type        = string
