@@ -37,12 +37,18 @@ class AnalyzeTest(unittest.TestCase):
         self.assertEqual(summary['failures'][0], dict(at_ms=5_000, status=502, error_code=0, wall_ms=3))
 
     def test_time_to_steady_is_the_first_bucket_after_which_everything_is_steady(self):
-        summary = zero_downtime.analyze(self.requests, self.events)
-        # Latency 40 ms > steady p99 (29 ms) until the disruption finished at 30 s.
-        self.assertEqual(summary['steady_threshold_p95_ms'], 29)
+        summary = zero_downtime.analyze(self.requests, self.events, bucket_seconds=5, threshold_factor=1.2)
+        # Steady p95 is 29 ms, so the limit is 34.8 ms; latency is 40 ms until the disruption finished at 30 s.
+        self.assertEqual(summary['steady_threshold_p95_ms'], 29 * 1.2)
         self.assertEqual(summary['time_to_steady_ms'], 30_000)
         self.assertEqual(summary['time_to_steady_after_finish_ms'], 0)
         self.assertEqual(summary['p95_ratio_disruption_to_steady'], round(40 / 29, 2))
+
+    def test_default_buckets_are_15_s_and_the_limit_is_twice_the_steady_p95(self):
+        summary = zero_downtime.analyze(self.requests, self.events)
+        self.assertEqual((summary['bucket_seconds'], summary['steady_threshold_p95_ms']), (15, 58))
+        # 40 ms is within 2 x 29 ms, so only the failures at 5.0-5.1 s keep the first bucket unsteady.
+        self.assertEqual(summary['time_to_steady_ms'], 15_000)
 
     def test_an_undisturbed_run_is_steady_at_once_and_a_bad_tail_never_is(self):
         calm = [request(-60_000 + n * 100) for n in range(1200)]

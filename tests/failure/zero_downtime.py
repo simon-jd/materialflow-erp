@@ -13,10 +13,13 @@ in a window by their start time:
 A request fails unless it got 201. Latency percentiles are nearest-rank over all requests of a
 window, failed ones included (a fast 503 is still a failure, counted separately).
 
-Time to steady state: the drill splits the run into `bucket_seconds` buckets. A bucket is steady
-when it has no failure and its p95 is at most the steady window's p99. The answer is the start of
-the first bucket at or after the disruption start from which every later bucket is steady,
-measured from the disruption start; 0 means the disruption never left steady state.
+Time to steady state: the run is split into `bucket_seconds` (15 s) buckets from the disruption
+start. A bucket is steady when it has no failure and its p95 is at most `threshold_factor` (2) times
+the steady window's p95. The answer is the start of the first bucket at or after the disruption
+start from which every later bucket is steady, measured from the disruption start; 0 means the
+disruption never left steady state, None that the run ended unsteady. (A first version used 5 s
+buckets and the steady p99 as the limit; at 75 requests per bucket that flagged ordinary noise and
+minutes of JIT warm-up in new pods as unsteady.)
 """
 import argparse
 import json
@@ -74,19 +77,20 @@ def time_to_steady(bucket_list, threshold_ms):
     return candidate
 
 
-def analyze(requests, events, steady_seconds=60, bucket_seconds=5):
+def analyze(requests, events, steady_seconds=60, bucket_seconds=15, threshold_factor=2):
     started, finished = events['disruption_started_ms'], events['disruption_finished_ms']
     steady = [r for r in requests if started - steady_seconds * 1000 <= r['t'] < started]
     disruption = [r for r in requests if started <= r['t'] < finished]
     after = [r for r in requests if r['t'] >= finished]
     windows = dict(steady=window_stats(steady), disruption=window_stats(disruption), after=window_stats(after))
-    threshold = windows['steady']['p99_ms']
+    threshold = threshold_factor * windows['steady']['p95_ms'] if windows['steady']['p95_ms'] is not None else None
     bucket_list = buckets(requests, started, bucket_seconds * 1000)
     settled = time_to_steady(bucket_list, threshold) if threshold is not None else None
     failures = sorted((r for r in requests if r['s'] != SUCCESS), key=lambda r: r['t'])
     return dict(
         disruption=events.get('disruption'), disruption_duration_ms=finished - started,
-        steady_seconds=steady_seconds, bucket_seconds=bucket_seconds, steady_threshold_p95_ms=threshold,
+        steady_seconds=steady_seconds, bucket_seconds=bucket_seconds, threshold_factor=threshold_factor,
+        steady_threshold_p95_ms=threshold,
         total=window_stats(requests), windows=windows,
         p95_ratio_disruption_to_steady=ratio(windows['disruption']['p95_ms'], windows['steady']['p95_ms']),
         p99_ratio_disruption_to_steady=ratio(windows['disruption']['p99_ms'], windows['steady']['p99_ms']),
@@ -108,13 +112,15 @@ def main(argv=None):
     parser.add_argument('requests', help='requests.jsonl from orders-constant-rate.js')
     parser.add_argument('events', help='events.json from kubernetes-zero-downtime.sh')
     parser.add_argument('--steady-seconds', type=int, default=60)
-    parser.add_argument('--bucket-seconds', type=int, default=5)
+    parser.add_argument('--bucket-seconds', type=int, default=15)
+    parser.add_argument('--threshold-factor', type=float, default=2)
     args = parser.parse_args(argv)
     with open(args.requests, encoding='utf-8') as source:
         requests = read_requests(source)
     with open(args.events, encoding='utf-8') as source:
         events = json.load(source)
-    json.dump(analyze(requests, events, args.steady_seconds, args.bucket_seconds), sys.stdout, indent=2)
+    json.dump(analyze(requests, events, args.steady_seconds, args.bucket_seconds, args.threshold_factor), sys.stdout,
+              indent=2)
     print()
 
 

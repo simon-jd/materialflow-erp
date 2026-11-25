@@ -184,8 +184,11 @@ case ${disruption} in
     k rollout status deploy/materialflow-erp-core --timeout=15m
     ;;
   drain-erp-core-node)
+    # The node with the most erp-core pods, never the one running the load generator.
+    lg_node=$(kubectl --context "${context}" -n "${lg_ns}" get pod "${lg_pod}" -o jsonpath='{.spec.nodeName}')
     node=$(k get pods -l app.kubernetes.io/name=materialflow-erp-core -o jsonpath='{range .items[*]}{.spec.nodeName}{"\n"}{end}' \
-      | sort | uniq -c | sort -rn | awk 'NR==1 {print $2}')
+      | grep -vx "${lg_node}" | sort | uniq -c | sort -rn | awk 'NR==1 {print $2}')
+    [[ -n ${node} ]]
     stamp "draining ${node} (erp-core pods: $(k get pods -l app.kubernetes.io/name=materialflow-erp-core -o jsonpath='{.items[*].spec.nodeName}'))"
     cordoned_node=${node}
     # A drain that cannot finish (for example a PDB whose replacement pod cannot be scheduled) is a
