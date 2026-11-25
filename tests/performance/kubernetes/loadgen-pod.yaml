@@ -1,0 +1,41 @@
+# Long-lived test client on the tainted load-generator node. The runners exec into it
+# (tests/performance/README.md, "Running on AKS"). Replace LOADGEN_IMAGE before applying:
+#   sed "s|LOADGEN_IMAGE|<acr>/materialflow/loadgen:<tag>|" tests/performance/kubernetes/loadgen-pod.yaml | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: loadgen
+  namespace: materialflow-loadgen
+  labels: {app.kubernetes.io/name: materialflow-loadgen}
+spec:
+  nodeSelector: {workload: loadgen}
+  tolerations:
+    - {key: workload, operator: Equal, value: loadgen, effect: NoSchedule}
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 5
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: loadgen
+      image: LOADGEN_IMAGE
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests: {cpu: "1", memory: 1536Mi}
+        limits: {cpu: "2", memory: 2560Mi}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: {drop: [ALL]}
+      volumeMounts:
+        - {name: work, mountPath: /work}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - name: work
+      emptyDir: {sizeLimit: 2Gi}
+    - name: tmp
+      emptyDir: {sizeLimit: 1Gi}
