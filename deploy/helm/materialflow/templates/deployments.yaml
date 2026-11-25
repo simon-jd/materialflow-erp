@@ -1,4 +1,6 @@
+{{- $fault := .Values.faultInjection }}
 {{- range $name, $component := .Values.components }}
+{{- $faultTarget := and $fault.enabled (has $name $fault.sharedProcessNamespace) }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,19 +22,34 @@ spec:
       labels:
         app.kubernetes.io/name: materialflow-{{ $name }}
         app.kubernetes.io/part-of: materialflow
+        {{- if $faultTarget }}
+        materialflow.io/fault-injection: "enabled"
+        {{- end }}
     spec:
       serviceAccountName: materialflow
       automountServiceAccountToken: false
-      terminationGracePeriodSeconds: 45
+      terminationGracePeriodSeconds: {{ $component.terminationGracePeriodSeconds | default 45 }}
+      {{- if $faultTarget }}
+      # Fault drills only. Inside its own PID namespace the JVM is PID 1, and the kernel drops a
+      # SIGKILL sent to PID 1 from within that namespace. With a shared namespace the pause
+      # container is PID 1, so `kubectl exec ... -- kill -KILL <java pid>` really kills the JVM.
+      # The kubelet then restarts the container in place: same pod, same IP, restartCount + 1.
+      shareProcessNamespace: true
+      {{- end }}
+      # Deployments only allow Always. A killed container is restarted immediately the first time;
+      # after that the kubelet waits until the crash back-off (10 s doubling to 300 s) has passed
+      # since the container exited, however long it ran; it resets after 10 min between two exits.
+      restartPolicy: Always
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
         fsGroup: 10001
         seccompProfile: {type: RuntimeDefault}
+      {{- include "materialflow.placement" (dict "root" $ "name" (printf "materialflow-%s" $name)) | nindent 6 }}
       containers:
         - name: {{ $name }}
-          image: "{{ $.Values.global.imageRegistry }}/{{ $name }}:{{ $.Values.global.imageTag }}"
+          image: "{{ $.Values.global.imageRegistry }}/{{ $name }}:{{ required "global.imageTag is required" $.Values.global.imageTag }}"
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           ports:
             - {name: http, containerPort: {{ $component.port }}}
@@ -42,9 +59,20 @@ spec:
           envFrom:
             - configMapRef: {name: materialflow-runtime}
             - secretRef: {name: {{ $.Values.global.existingSecret }}}
+          {{- $profile := and $fault.enabled (has $name $fault.springProfile) }}
+          {{- if or $component.env $profile }}
+          env:
+            {{- range $key, $value := $component.env }}
+            - {name: {{ $key }}, value: {{ $value | quote }}}
+            {{- end }}
+            {{- if $profile }}
+            # Installs the advisory-lock crash-window gate (ConsumerCrashWindowGate.PROFILE).
+            - {name: SPRING_PROFILES_ACTIVE, value: fault-injection}
+            {{- end }}
+          {{- end }}
           startupProbe:
             httpGet: {path: /actuator/health/readiness, port: http}
-            failureThreshold: 30
+            failureThreshold: {{ $.Values.global.startupFailureThreshold | default 30 }}
             periodSeconds: 5
           readinessProbe:
             httpGet: {path: /actuator/health/readiness, port: http}
@@ -54,6 +82,7 @@ spec:
             httpGet: {path: /actuator/health/liveness, port: http}
             periodSeconds: 15
             timeoutSeconds: 3
+          {{- include "materialflow.preStop" $ | nindent 10 }}
           resources:
             {{- toYaml $component.resources | nindent 12 }}
           securityContext:
@@ -62,7 +91,9 @@ spec:
             capabilities: {drop: [ALL]}
           volumeMounts:
             - {name: tmp, mountPath: /tmp}
+            {{- include "materialflow.secretsStoreMount" $ | nindent 12 }}
       volumes:
         - name: tmp
           emptyDir: {sizeLimit: 1Gi}
+        {{- include "materialflow.secretsStoreVolume" $ | nindent 8 }}
 {{- end }}

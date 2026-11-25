@@ -139,3 +139,19 @@ reconciles balance, allocations, reservations, ledger, statuses, shortages and
 credit. The harness and the HTTP test are repeatable commands in
 `tests/performance/README.md`. Numbers come from one shared laptop with other
 workloads running and are evidence for relative behavior, not capacity planning.
+
+## Note, 2026-11-25: against a managed PostgreSQL
+
+The harness ran unchanged against Azure Database for PostgreSQL Flexible Server (GP D2ds_v5, 32 GiB
+P4 disk) from a pod in the same VNet, 0.5–0.7 ms round trip
+([evidence](../evidence/azure-2026-11-24-locking-harness/README.md)). Every guarded strategy kept
+the invariant in all 96 measured runs. The ranking held and the gaps widened: on one hot SKU the
+conditional `UPDATE` ran 1.6–3.4× faster than pessimistic locking, and optimistic retries fell to
+23–40 attempts/s from 32 workers on, with 64–65% of requests exhausting their retries. Absolute
+rates were 0.02–0.47× the laptop's because every commit waited for the managed disk, which reported
+100% of its provisioned IOPS in use for most of the run while database CPU stayed near 11%. End to
+end, the hot-SKU HTTP test spent 17–20 ms of serialized time per order on AKS against 4.4–7.3 ms
+locally. The decision stands with a stronger reason: on remote storage, time spent holding the row
+lock is dominated by commit latency, so the conditional statement (one statement, then commit) is
+the cheaper lock span, and optimistic retries are not an option for hot SKUs. The first operational
+lever on this environment is the disk tier, not the locking strategy.

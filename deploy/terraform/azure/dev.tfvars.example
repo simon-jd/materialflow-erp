@@ -1,0 +1,12 @@
+# Copy to dev.tfvars (git-ignored) and fill in.
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# Public IPv4 addresses allowed through the Key Vault firewall (the machine that runs Terraform).
+# Bare addresses, not /32: Azure normalises /32 away, which would show a permanent diff.
+operator_ip_addresses = ["203.0.113.10"]
+
+# Optional overrides
+# location            = "westus"
+# dns_label           = "materialflow-erp"       # -> materialflow-erp.westus.cloudapp.azure.com
+# loadgen_node_count  = 0                        # no load-generator node until a test needs it
+# budget_amount       = 40

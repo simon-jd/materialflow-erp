@@ -1,0 +1,155 @@
+{{- $host := include "platform.host" . }}
+{{- $edge := .Values.namespaces.edge }}
+# Public edge: one Gateway (application routing add-on, GatewayClass approuting-istio) on the
+# Terraform-managed static IP with the DNS label, HTTP-01 certificates from Let's Encrypt via
+# cert-manager, and a single origin for the console (/), the API (/api) and Keycloak (/idp).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: materialflow-gateway-options
+  namespace: {{ $edge }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+data:
+  deployment: |
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            {{- toYaml .Values.nodeSelector | nindent 12 }}
+          containers:
+            - name: istio-proxy
+              resources:
+                requests:
+                  {{- toYaml .Values.gateway.proxyResources.requests | nindent 18 }}
+  horizontalPodAutoscaler: |
+    spec:
+      minReplicas: 2
+      maxReplicas: {{ .Values.gateway.maxReplicas }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: materialflow
+  namespace: {{ $edge }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  gatewayClassName: {{ .Values.gateway.className }}
+  infrastructure:
+    annotations:
+      # Bind the load balancer to the static public IP (and DNS label) Terraform owns.
+      service.beta.kubernetes.io/azure-pip-name: {{ required "platform.ingress.publicIpName is required" .Values.platform.ingress.publicIpName | quote }}
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: {{ required "platform.ingress.resourceGroup is required" .Values.platform.ingress.resourceGroup | quote }}
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: materialflow-gateway-options
+  listeners:
+    # Port 80 only answers ACME HTTP-01 challenges and redirects everything else to HTTPS.
+    - name: http
+      hostname: {{ $host | quote }}
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces: {from: Same}
+    - name: https
+      hostname: {{ $host | quote }}
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - {kind: Secret, name: materialflow-tls}
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Release.Namespace }}}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: https-redirect
+  namespace: {{ $edge }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - {name: materialflow, sectionName: http}
+  hostnames: [{{ $host | quote }}]
+  rules:
+    # cert-manager's solver route matches /.well-known/acme-challenge/<token> exactly, which takes
+    # precedence over this catch-all prefix.
+    - filters:
+        - type: RequestRedirect
+          requestRedirect: {scheme: https, statusCode: 301}
+{{- range $name, $server := dict "letsencrypt-staging" "https://acme-staging-v02.api.letsencrypt.org/directory" "letsencrypt-prod" "https://acme-v02.api.letsencrypt.org/directory" }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "platform.labels" $ | nindent 4 }}
+spec:
+  acme:
+    server: {{ $server }}
+    # No contact e-mail: Let's Encrypt no longer sends expiry mail and none is stored in code.
+    privateKeySecretRef: {name: {{ $name }}-account}
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - {group: gateway.networking.k8s.io, kind: Gateway, name: materialflow, namespace: {{ $edge }}, sectionName: http}
+{{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: materialflow-tls
+  namespace: {{ $edge }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  secretName: materialflow-tls
+  dnsNames: [{{ $host | quote }}]
+  issuerRef: {group: cert-manager.io, kind: ClusterIssuer, name: {{ .Values.tls.issuer }}}
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: materialflow
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - {name: materialflow, namespace: {{ $edge }}, sectionName: https}
+  hostnames: [{{ $host | quote }}]
+  rules:
+    # The API gateway. Only its readiness summary is public under /actuator.
+    - matches:
+        - path: {type: PathPrefix, value: /api}
+        - path: {type: Exact, value: /actuator/health}
+      filters:
+        - {type: ResponseHeaderModifier, responseHeaderModifier: {set: [{name: Strict-Transport-Security, value: "max-age=31536000"}]}}
+      backendRefs:
+        - {name: materialflow-edge-gateway, port: 8081}
+    # Keycloak: only the application realm and static login resources. The admin console and the
+    # master realm are not routed (they fall through to the console's SPA shell).
+    - matches:
+        - path: {type: PathPrefix, value: /idp/realms/materialflow}
+        - path: {type: PathPrefix, value: /idp/resources}
+      filters:
+        - {type: RequestHeaderModifier, requestHeaderModifier: {remove: [X-Forwarded-Host, X-Forwarded-Port]}}
+        - {type: ResponseHeaderModifier, responseHeaderModifier: {set: [{name: Strict-Transport-Security, value: "max-age=31536000"}]}}
+      backendRefs:
+        - {name: keycloak, port: 8080}
+    # The admin console (nginx serves the SPA, /config.js and the security headers).
+    - matches:
+        - path: {type: PathPrefix, value: /}
+      filters:
+        - {type: ResponseHeaderModifier, responseHeaderModifier: {set: [{name: Strict-Transport-Security, value: "max-age=31536000"}]}}
+      backendRefs:
+        - {name: materialflow-admin-console, port: 8080}

@@ -1,0 +1,222 @@
+{
+ "disruption": "drain-erp-core-node",
+ "disruption_duration_ms": 102298,
+ "steady_seconds": 60,
+ "bucket_seconds": 15,
+ "threshold_factor": 2,
+ "steady_threshold_p95_ms": 56,
+ "total": {
+  "requests": 4274,
+  "failed": 311,
+  "non_2xx": 311,
+  "no_response": 0,
+  "status_counts": {
+   "201": 3963,
+   "503": 311
+  },
+  "error_codes": {
+   "1503": 311
+  },
+  "p50_ms": 23,
+  "p95_ms": 254,
+  "p99_ms": 260,
+  "max_ms": 1855
+ },
+ "windows": {
+  "steady": {
+   "requests": 900,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 900
+   },
+   "error_codes": {},
+   "p50_ms": 20,
+   "p95_ms": 28,
+   "p99_ms": 34,
+   "max_ms": 45
+  },
+  "disruption": {
+   "requests": 1535,
+   "failed": 311,
+   "non_2xx": 311,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1224,
+    "503": 311
+   },
+   "error_codes": {
+    "1503": 311
+   },
+   "p50_ms": 26,
+   "p95_ms": 257,
+   "p99_ms": 271,
+   "max_ms": 1855
+  },
+  "after": {
+   "requests": 1382,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1382
+   },
+   "error_codes": {},
+   "p50_ms": 25,
+   "p95_ms": 42,
+   "p99_ms": 57,
+   "max_ms": 215
+  }
+ },
+ "p95_ratio_disruption_to_steady": 9.18,
+ "p99_ratio_disruption_to_steady": 7.97,
+ "time_to_steady_ms": 105000,
+ "time_to_steady_after_finish_ms": 2702,
+ "first_failure_ms": 3221,
+ "last_failure_ms": 23887,
+ "failures": [
+  {
+   "at_ms": 3221,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 254
+  },
+  {
+   "at_ms": 3287,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 266
+  },
+  {
+   "at_ms": 3355,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 280
+  },
+  {
+   "at_ms": 3421,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 254
+  },
+  {
+   "at_ms": 3487,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 254
+  },
+  {
+   "at_ms": 3554,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 3621,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 3687,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 3754,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 3821,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 275
+  },
+  {
+   "at_ms": 3889,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 3954,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 254
+  },
+  {
+   "at_ms": 4021,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 254
+  },
+  {
+   "at_ms": 4091,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  },
+  {
+   "at_ms": 4155,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 293
+  },
+  {
+   "at_ms": 4221,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 261
+  },
+  {
+   "at_ms": 4287,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 258
+  },
+  {
+   "at_ms": 4355,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 256
+  },
+  {
+   "at_ms": 4421,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 271
+  },
+  {
+   "at_ms": 4488,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 253
+  }
+ ],
+ "k6": {
+  "dropped_iterations": 0,
+  "iterations": 4274,
+  "vus_max": 40
+ },
+ "orders": {
+  "orders": 3963,
+  "completed_idempotency_keys": 3963,
+  "reserved": 3963.0,
+  "acknowledged_201": 3963
+ },
+ "run": "after-nplus1-drain-erp-core-node-1",
+ "timeline": [
+  "2026-11-24T23:43:59.105Z load-start",
+  "2026-11-24T23:45:30.256Z disruption-start drain-erp-core-node",
+  "2026-11-24T23:45:31.151Z draining aks-system-11841385-vmss000001 (erp-core pods: aks-system-11841385-vmss000000 aks-system-11841385-vmss000001)",
+  "2026-11-24T23:47:01.248Z drained aks-system-11841385-vmss000001",
+  "2026-11-24T23:47:01.742Z erp-core rollout status returned while aks-system-11841385-vmss000001 cordoned",
+  "2026-11-24T23:47:02.776Z uncordoned aks-system-11841385-vmss000001",
+  "2026-11-24T23:47:12.553Z disruption-finished drain-erp-core-node",
+  "2026-11-24T23:48:43.399Z load-stop"
+ ]
+}

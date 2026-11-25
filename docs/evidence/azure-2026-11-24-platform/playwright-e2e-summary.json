@@ -1,0 +1,99 @@
+{
+  "tool": "Playwright 1.65.1, chromium, workers=1, retries=0",
+  "spec": "apps/admin-console/e2e/admin-console.spec.ts",
+  "base_url": "https://materialflow-erp.westus.cloudapp.azure.com",
+  "client": "macOS laptop over the public internet",
+  "runs": [
+    {
+      "run": 1,
+      "started_at": "2026-11-24T19:10:49.784Z",
+      "duration_ms": 12719,
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "title": "a sales user creates an order and finds it in the list and the detail",
+          "status": "passed",
+          "duration_ms": 4886
+        },
+        {
+          "title": "a read-only user can browse but cannot create, and the API refuses as well",
+          "status": "passed",
+          "duration_ms": 1451
+        },
+        {
+          "title": "an approver approves a large order that its maker cannot decide",
+          "status": "passed",
+          "duration_ms": 3731
+        },
+        {
+          "title": "every screen renders under the production CSP without console errors",
+          "status": "passed",
+          "duration_ms": 1752
+        }
+      ],
+      "database": "fresh (Flyway seed), first use"
+    },
+    {
+      "run": 2,
+      "started_at": "2026-11-24T19:35:06.361Z",
+      "duration_ms": 41673,
+      "passed": 2,
+      "failed": 2,
+      "tests": [
+        {
+          "title": "a sales user creates an order and finds it in the list and the detail",
+          "status": "failed",
+          "duration_ms": 17919
+        },
+        {
+          "title": "a read-only user can browse but cannot create, and the API refuses as well",
+          "status": "passed",
+          "duration_ms": 1473
+        },
+        {
+          "title": "an approver approves a large order that its maker cannot decide",
+          "status": "failed",
+          "duration_ms": 18652
+        },
+        {
+          "title": "every screen renders under the production CSP without console errors",
+          "status": "passed",
+          "duration_ms": 1927
+        }
+      ],
+      "database": "same database after run 1 and other test orders: synthetic stock for CEM-42-5 already allocated",
+      "note": "2 failures are data preconditions, not platform faults: the tests expect seeded stock (the Compose e2e stack starts from empty volumes). Orders were backordered instead of allocated."
+    },
+    {
+      "run": 3,
+      "started_at": "2026-11-24T19:37:08.385Z",
+      "duration_ms": 13305,
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        {
+          "title": "a sales user creates an order and finds it in the list and the detail",
+          "status": "passed",
+          "duration_ms": 4875
+        },
+        {
+          "title": "a read-only user can browse but cannot create, and the API refuses as well",
+          "status": "passed",
+          "duration_ms": 1651
+        },
+        {
+          "title": "an approver approves a large order that its maker cannot decide",
+          "status": "passed",
+          "duration_ms": 4190
+        },
+        {
+          "title": "every screen renders under the production CSP without console errors",
+          "status": "passed",
+          "duration_ms": 2069
+        }
+      ],
+      "database": "fresh again: materialflow database dropped and recreated, erp-core re-ran Flyway (runbook \"Reset synthetic data\")"
+    }
+  ]
+}

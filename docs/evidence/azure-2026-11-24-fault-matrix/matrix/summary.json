@@ -1,0 +1,170 @@
+{
+  "backend": "kubernetes",
+  "kube_context": "aks-materialflow-dev",
+  "namespace": "materialflow",
+  "scope": "Kubernetes namespace with faultInjection.enabled, real JVM SIGKILL, container restarted in place by the kubelet",
+  "started_at": "2026-11-24T20:10:48.064077+00:00",
+  "windows": [
+    "consumer-pre-commit",
+    "consumer-post-commit",
+    "relay-post-ack",
+    "dlq-post-ack"
+  ],
+  "repeat": 5,
+  "images": {
+    "erp-core": [
+      {
+        "pod": "materialflow-erp-core-77cf785854-hrvzj",
+        "node": "aks-system-11841385-vmss000001",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core@sha256:4a20a85caa383d33b3dd6f541734ca0a316f8adee60278a4cbc2a29027f9a64d"
+      },
+      {
+        "pod": "materialflow-erp-core-77cf785854-w9g6j",
+        "node": "aks-system-11841385-vmss000001",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core@sha256:4a20a85caa383d33b3dd6f541734ca0a316f8adee60278a4cbc2a29027f9a64d"
+      }
+    ],
+    "event-relay": [
+      {
+        "pod": "materialflow-event-relay-59ccb979d8-5g5m9",
+        "node": "aks-system-11841385-vmss000000",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay@sha256:6c435529bd2f602b44a7bf68f1fde0615c2101bfd20b7f6921895be8caaf5b8d"
+      },
+      {
+        "pod": "materialflow-event-relay-59ccb979d8-8bc9t",
+        "node": "aks-system-11841385-vmss000000",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay@sha256:6c435529bd2f602b44a7bf68f1fde0615c2101bfd20b7f6921895be8caaf5b8d"
+      }
+    ]
+  },
+  "status": "passed",
+  "totals": {
+    "runs": 20,
+    "sigkills": 20,
+    "passed": 20,
+    "failed": 0
+  },
+  "per_window": {
+    "consumer-pre-commit": {
+      "number": 1,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 15808,
+        "max": 16432,
+        "min": 14719
+      },
+      "restart_to_recovered_ms": {
+        "p50": -287247,
+        "max": 5442,
+        "min": -309652
+      },
+      "container_running_ms": {
+        "p50": 301966,
+        "max": 325438,
+        "min": 10366
+      },
+      "container_ready_ms": {
+        "p50": 320987,
+        "max": 344307,
+        "min": 30638
+      },
+      "failures": []
+    },
+    "consumer-post-commit": {
+      "number": 2,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 14026,
+        "max": 14230,
+        "min": 9779
+      },
+      "restart_to_recovered_ms": {
+        "p50": -292413,
+        "max": -12706,
+        "min": -311078
+      },
+      "container_running_ms": {
+        "p50": 306643,
+        "max": 320857,
+        "min": 23050
+      },
+      "container_ready_ms": {
+        "p50": 323127,
+        "max": 337851,
+        "min": 40767
+      },
+      "failures": []
+    },
+    "relay-post-ack": {
+      "number": 3,
+      "service": "event-relay",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 17760,
+        "max": 19035,
+        "min": 17027
+      },
+      "restart_to_recovered_ms": {
+        "p50": 16864,
+        "max": 18176,
+        "min": 15147
+      },
+      "container_running_ms": {
+        "p50": 1055,
+        "max": 1880,
+        "min": 450
+      },
+      "container_ready_ms": {
+        "p50": 14453,
+        "max": 17358,
+        "min": 13796
+      },
+      "failures": []
+    },
+    "dlq-post-ack": {
+      "number": 4,
+      "service": "erp-core",
+      "runs": 5,
+      "sigkills": 5,
+      "passed": 5,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 13824,
+        "max": 14098,
+        "min": 13688
+      },
+      "restart_to_recovered_ms": {
+        "p50": -147057,
+        "max": 13586,
+        "min": -299063
+      },
+      "container_running_ms": {
+        "p50": 160861,
+        "max": 312887,
+        "min": 512
+      },
+      "container_ready_ms": {
+        "p50": 178599,
+        "max": 330964,
+        "min": 19622
+      },
+      "failures": []
+    }
+  },
+  "finished_at": "2026-11-24T21:16:42.239606+00:00"
+}

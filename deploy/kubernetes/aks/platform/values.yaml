@@ -1,0 +1,66 @@
+# Environment-specific keys under `platform` come from `terraform output -raw helm_environment_values`
+# (deploy/terraform/azure/outputs.tf). Install:
+#   helm upgrade --install materialflow-platform deploy/kubernetes/aks/platform -n materialflow \
+#     -f environment-values.yaml --set keycloak.imageTag=<tag>
+platform:
+  publicHost: ""          # e.g. materialflow-erp.westus.cloudapp.azure.com
+  registry: ""            # <acr>.azurecr.io/materialflow (application images)
+  acrLoginServer: ""      # <acr>.azurecr.io (mirrored third-party images under mirror/)
+  keyVault: {name: "", tenantId: "", clientId: ""}
+  postgres: {host: "", user: "", subnet: ""}
+  ingress: {publicIpName: "", resourceGroup: ""}
+
+nodeSelector: {workload: app}
+
+namespaces:
+  edge: materialflow-edge         # Gateway, TLS certificate, ACME HTTP-01 solver
+  loadgen: materialflow-loadgen   # test clients on the tainted load-generator pool
+
+secretProviderClass: materialflow-runtime
+
+kafka:
+  image: mirror/apache/kafka:4.1.2
+  storage: 8Gi
+  storageClass: managed-csi
+  heap: "-Xms512m -Xmx512m"
+  topics: [materialflow.domain-events.v1, materialflow.domain-events.v1.DLQ, materialflow.projection-dlq.v1]
+  resources:
+    requests: {cpu: 100m, memory: 640Mi}
+    limits: {cpu: "1", memory: 1Gi}
+
+redis:
+  image: mirror/redis:8.2.1-alpine
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+    limits: {cpu: 250m, memory: 192Mi}
+
+keycloak:
+  imageTag: ""            # tag of <registry>/keycloak built from deploy/docker/Dockerfile.keycloak
+  bootstrapAdminUser: bootstrap-admin
+  resources:
+    requests: {cpu: 100m, memory: 640Mi}
+    limits: {cpu: "2", memory: 1280Mi}
+
+jaeger:
+  image: mirror/jaegertracing/jaeger:2.10.0
+  resources:
+    requests: {cpu: 20m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 512Mi}
+
+toolbox:
+  enabled: true
+  image: mirror/postgres:17.11-alpine
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+    limits: {cpu: 250m, memory: 128Mi}
+
+gateway:
+  className: approuting-istio
+  # Envoy proxy pods: the add-on enforces at least 2 replicas (HPA).
+  proxyResources:
+    requests: {cpu: 50m, memory: 96Mi}
+  maxReplicas: 3
+
+tls:
+  # letsencrypt-staging while testing reachability; letsencrypt-prod for a browser-trusted certificate.
+  issuer: letsencrypt-prod

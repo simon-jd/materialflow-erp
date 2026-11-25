@@ -1,0 +1,11 @@
+apiVersion: v2
+name: materialflow-platform
+description: >-
+  Cluster-side platform for the MaterialFlow AKS environment: Kafka (KRaft, persistent disk), Redis,
+  Keycloak under /idp, Jaeger, the Key Vault SecretProviderClass, the public Gateway with its
+  routes and Let's Encrypt certificate, and a psql toolbox. Installed by the operator (cluster
+  admin); the cd-azure workflow only deploys deploy/helm/materialflow.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.30.0-0"

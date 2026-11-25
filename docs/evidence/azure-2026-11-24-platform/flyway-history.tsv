@@ -1,0 +1,7 @@
+1	1	initial schema	t	mfadmin	2026-11-24 19:36:45.468212
+2	2	synthetic demo data	t	mfadmin	2026-11-24 19:36:45.783036
+3	3	purchase approval template	t	mfadmin	2026-11-24 19:36:45.874253
+4	4	backorder reallocation status	t	mfadmin	2026-11-24 19:36:45.923929
+5	5	outbox trace context	t	mfadmin	2026-11-24 19:36:45.96792
+6	6	outbox claim fencing	t	mfadmin	2026-11-24 19:36:46.002812
+7	7	operator list indexes	t	mfadmin	2026-11-24 19:36:46.040178

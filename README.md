@@ -10,15 +10,15 @@ distributor, with a React + TypeScript operator console. PostgreSQL is the sourc
 of truth: the inventory debit, the credit reservation, the idempotent order and its
 audit and outbox rows commit in one transaction, so the database commit is the
 order-success boundary. Kafka, Redis and the read projections are recoverable from
-PostgreSQL. The stack runs on Docker Compose, on kind with Helm, or on AWS from the
-included Terraform.
+PostgreSQL. The stack runs on Docker Compose, on kind with Helm, on Azure AKS (applied and
+verified over public HTTPS) or on AWS from the included Terraform.
 
 ![Admin console: sales orders](docs/images/admin-console-orders.png)
 
 ## Highlights
 
-All measurements are local runs on an Apple Silicon laptop with synthetic data.
-Each row links to its evidence folder, which records the method, environment and
+Measurements are local runs on an Apple Silicon laptop with synthetic data unless a row
+says Azure. Each row links to its evidence folder, which records the method, environment and
 raw results.
 
 | Area | What was built | Result |
@@ -28,7 +28,9 @@ raw results.
 | Concurrency | A harness comparing pessimistic, optimistic and single-statement reservation on PostgreSQL 17 with virtual threads ([ADR 0008](docs/adr/0008-inventory-reservation-concurrency.md), [evidence](docs/evidence/local-2026-11-23-inventory-concurrency/README.md)) | No oversell in 144 measured runs. A deliberately unguarded control oversold in 48 of 48 runs. On one hot SKU the conditional UPDATE ran at 1.3–1.9× the throughput of `SELECT … FOR UPDATE`; optimistic retries fell behind from 32 workers up. Writing these tests exposed a bug where an order with two lines on the same inventory row always failed with a 409; it is fixed with a regression test. |
 | Load | A JMeter hot-SKU test through the JWT gateway and directly against the service | 3,000 measured requests with 0 oversell, 0 duplicate orders and 0 deadlocks; p99 was 559 ms direct and 1,102 ms through the gateway. |
 | Full stack | A React 19 + TypeScript console using OIDC PKCE, an OpenAPI-generated client and tenant-scoped paginated reads ([ADR 0010](docs/adr/0010-admin-console.md), [evidence](docs/evidence/local-2026-11-23-admin-console/README.md)) | 64 Vitest tests and 4 Playwright end-to-end tests against the real stack (Keycloak login, maker-checker approval, read-only role enforced by both the UI and the API). |
-| Cloud delivery | Terraform for ECS Fargate on Graviton, RDS PostgreSQL 17, MSK, Valkey and CloudFront, plus GitHub Actions CD using OIDC ([ADR 0009](docs/adr/0009-aws-ecs-fargate-deployment.md), [runbook](docs/runbooks/aws-deploy.md)) | Validated offline: 17 `terraform test` cases, 0 TFLint issues, 0 unaccepted Trivy findings. Not yet applied to an AWS account; plans require an explicit opt-in. |
+| Azure environment | Terraform for AKS (Arm64 nodes, Cilium, Gateway API), PostgreSQL Flexible Server 17 on private access, Key Vault with workload identity (no secret in Terraform state), Kafka/Keycloak in the cluster, Let's Encrypt HTTPS, GitHub Actions CD using OIDC ([ADR 0012](docs/adr/0012-azure-aks-deployment.md), [runbook](docs/runbooks/azure-deploy.md), [evidence](docs/evidence/azure-2026-11-24-platform/README.md)) | Applied in westus: 42 Azure resources, 55/55 pods Ready. Over the public HTTPS URL the JWT/RBAC test, the console's 4 Playwright tests and a Kubernetes qualification smoke passed; one order was traced from the API through PostgreSQL, the outbox and Kafka to the consumer inbox (one Jaeger trace across 3 services). |
+| Cloud tests (Azure) | The fault matrix, rolling deploys and node drains under load, the hot-SKU JMeter test and the locking harness, repeated on AKS against managed PostgreSQL ([overview](docs/evidence/azure-2026-11-24-cloud-tests/README.md)) | 20 of 20 SIGKILLs restarted in place with every invariant held; consumer recovery 9.8–16.4 s on the surviving replica. At 15 orders/s, rollout restarts and pod deletions had 0 failed requests in 6 of 6 runs after two Helm-chart fixes (pooled connections to terminating pods, gateway replicas co-scheduled on one node). Node drains need N+1 capacity; with it, 2 of 3 drains had 0 failures and the third shed 311 requests in 21 s because Redis is a single replica. Hot-SKU invariants held in all 6 cloud runs; the locking harness kept its invariant in 96 of 96 runs and was bound by the managed disk's IOPS. The drills also exposed a poison-order bug in reservation expiry, now isolated with exponential backoff. |
+| Cloud delivery (AWS) | Terraform for ECS Fargate on Graviton, RDS PostgreSQL 17, MSK, Valkey and CloudFront, plus GitHub Actions CD using OIDC ([ADR 0009](docs/adr/0009-aws-ecs-fargate-deployment.md), [runbook](docs/runbooks/aws-deploy.md)) | Validated offline: 17 `terraform test` cases, 0 TFLint issues, 0 unaccepted Trivy findings. Not yet applied to an AWS account; plans require an explicit opt-in. |
 
 ## Architecture
 
@@ -61,7 +63,7 @@ The lock order, outbox claim lifecycle and consumer failure policy are described
 | Identity | Keycloak (OIDC, Authorization Code + PKCE), tenant and role claims taken only from the signed token |
 | Observability | OpenTelemetry, Prometheus with alert-rule tests, Grafana, Jaeger |
 | Testing | JUnit 5, Testcontainers, ArchUnit, JMH, JMeter, Vitest + Testing Library + MSW, Playwright |
-| Delivery | Docker (non-root, read-only), Helm and kind, Terraform for AWS, GitHub Actions with OIDC, Trivy, gitleaks, CycloneDX SBOM |
+| Delivery | Docker (non-root, read-only), Helm and kind, Terraform for Azure (AKS) and AWS, cert-manager, GitHub Actions with OIDC, Trivy, gitleaks, CycloneDX SBOM |
 
 ## Run locally
 
@@ -85,6 +87,7 @@ Reproduce the measurements:
 
 - Fault matrix: [tests/failure/README.md](tests/failure/README.md)
 - Concurrency harness and JMeter hot-SKU test: [tests/performance/README.md](tests/performance/README.md)
+- Azure (AKS) bootstrap, deploy, verify, stop/start and teardown: [docs/runbooks/azure-deploy.md](docs/runbooks/azure-deploy.md)
 - AWS bootstrap, deploy, verify and teardown: [docs/runbooks/aws-deploy.md](docs/runbooks/aws-deploy.md)
 
 ## Continuous integration and delivery
@@ -94,7 +97,8 @@ Reproduce the measurements:
 | [ci](.github/workflows/ci.yml) | Build, unit and Testcontainers integration tests, ArchUnit, Flyway, coverage, Checkstyle and SpotBugs, OpenAPI/Protobuf/JSON Schema lint, Compose and Helm validation, Prometheus alert tests, non-root image builds with a Trivy scan, gitleaks and a CycloneDX SBOM |
 | [admin-console](.github/workflows/admin-console.yml) | Generated-client drift check, type check, lint, unit tests, production build and image build |
 | [fault-matrix](.github/workflows/fault-matrix.yml) | Drill unit tests and fault-injection overlay validation |
-| [terraform](.github/workflows/terraform.yml) | `fmt`, `validate`, `terraform test`, TFLint and Trivy IaC scanning |
+| [terraform](.github/workflows/terraform.yml) | `fmt`, `validate`, `terraform test`, TFLint and Trivy IaC scanning for the AWS and Azure stacks |
+| [cd-azure](.github/workflows/cd-azure.yml) | Build and test, push Arm64 images to ACR from a native Arm64 runner, `helm upgrade --install --rollback-on-failure` on AKS and a smoke test through the public URL. Skipped until the Azure deploy identity is configured. |
 | [cd-aws](.github/workflows/cd-aws.yml) | Build, push ARM64 images to ECR, roll out ECS services with circuit-breaker rollback, publish the console and smoke-test it. Skipped until an AWS deploy role is configured. |
 | [admin-console-e2e](.github/workflows/admin-console-e2e.yml) | Manual Playwright run against the full Compose stack |
 
@@ -113,6 +117,7 @@ Architecture decision records are in [docs/adr](docs/adr):
 9. [AWS environment on ECS Fargate with managed data services](docs/adr/0009-aws-ecs-fargate-deployment.md)
 10. [Admin console on the existing API](docs/adr/0010-admin-console.md)
 11. [Detect a dead domain-event consumer in 10 seconds](docs/adr/0011-consumer-failure-detection.md)
+12. [Run the cloud test environment on AKS with managed PostgreSQL](docs/adr/0012-azure-aks-deployment.md)
 
 Operational runbooks are in [docs/runbooks](docs/runbooks).
 
@@ -136,6 +141,8 @@ Operational runbooks are in [docs/runbooks](docs/runbooks).
   JMeter workloads.
 - React + TypeScript admin console over tenant-scoped read endpoints, signed in
   with OIDC Authorization Code + PKCE.
+- Terraform for an Azure environment (AKS, PostgreSQL Flexible Server, Key Vault, ACR) that is
+  applied and verified, with a Helm-based GitHub Actions CD pipeline using OIDC.
 - Opt-in Terraform for an AWS environment (ECS Fargate, RDS, MSK, Valkey,
   CloudFront) and a GitHub Actions CD pipeline that authenticates through OIDC.
 
@@ -149,7 +156,9 @@ The 2026-11-23 evidence sets ([fault matrix](docs/evidence/local-2026-11-23-faul
 [inventory concurrency](docs/evidence/local-2026-11-23-inventory-concurrency/README.md),
 [admin console](docs/evidence/local-2026-11-23-admin-console/README.md),
 [AWS IaC validation](docs/evidence/local-2026-11-23-aws-iac/README.md)) are new local runs and are
-kept separate from the earlier snapshots below.
+kept separate from the earlier snapshots below. The
+[Azure platform evidence](docs/evidence/azure-2026-11-24-platform/README.md) (2026-11-24) is the
+first run in a real cloud environment.
 
 The 2026-09-01 local verification index is
 [`docs/evidence/local-2026-09-01/README.md`](docs/evidence/local-2026-09-01/README.md).

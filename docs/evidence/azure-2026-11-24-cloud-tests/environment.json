@@ -1,0 +1,73 @@
+{
+  "captured_at": "2026-11-24T20:25:00Z",
+  "label": "measured (kubectl, az, tool --version) unless noted",
+  "cloud": {
+    "provider": "Azure",
+    "subscription": "Azure for Students (ID not recorded here)",
+    "region": "westus (no availability zones)",
+    "public_url": "https://materialflow-erp.westus.cloudapp.azure.com",
+    "platform_evidence": "../azure-2026-11-24-platform/README.md"
+  },
+  "aks": {
+    "kubernetes": "v1.37.1 (kubectl client v1.37.2)",
+    "tier": "Free",
+    "network": "Azure CNI Overlay, Cilium data plane",
+    "node_pools": [
+      {"name": "system", "vm_size": "Standard_B2ps_v2", "count": 2, "vcpu": 2, "memory_gib": 8, "arch": "arm64",
+       "burstable": "40% baseline, 48 credits/h earned, 1,152 max", "allocatable": {"cpu": "1900m", "memory_mib_approx": 6600},
+       "labels": {"workload": "app"}},
+      {"name": "loadgen", "vm_size": "Standard_B2pls_v2", "count": 1, "vcpu": 2, "memory_gib": 4, "arch": "arm64",
+       "burstable": "30% baseline, 36 credits/h earned, 864 max", "allocatable": {"cpu": "1900m", "memory_kib": 3236520},
+       "labels": {"workload": "loadgen"}, "taint": "workload=loadgen:NoSchedule"}
+    ],
+    "node_image": "Microsoft Azure Linux 3.0, kernel 6.6.159.1-2.azl3, containerd 2.2.4",
+    "cpu_credits_remaining_at_start": {"aks-system-11841385-vmss_0": 99.5, "aks-system-11841385-vmss_1": 100.6,
+                                       "aks-loadgen-25938360-vmss_0": 101.1, "at": "2026-11-24T20:11Z"}
+  },
+  "postgresql": {
+    "service": "Azure Database for PostgreSQL Flexible Server",
+    "version": "17.11",
+    "sku": "GeneralPurpose Standard_D2ds_v5 (2 vCores, not burstable)",
+    "storage": "32 GiB Premium SSD P4, 120 baseline IOPS (disk bursting per Azure P4 rules), high availability disabled",
+    "access": "private (VNet-integrated), TLS required",
+    "log_statement": "none"
+  },
+  "application": {
+    "helm_release": "materialflow (chart materialflow-0.1.0), values-aks.yaml + environment values",
+    "image_tag": "b20261124-1",
+    "image_digests": {
+      "erp-core": "sha256:4a20a85caa383d33b3dd6f541734ca0a316f8adee60278a4cbc2a29027f9a64d",
+      "event-relay": "sha256:6c435529bd2f602b44a7bf68f1fde0615c2101bfd20b7f6921895be8caaf5b8d",
+      "edge-gateway": "sha256:866984125a7fd95bba0865d78b5fd82935acb2cdbd2ee9390fe238bda2799067",
+      "stream-projection": "sha256:0b6fc8a2a879ef4f9280ada9906f5c0477465eae1a9ff42bca6148d9af0b9edf",
+      "integration-adapter": "sha256:22234bfe3ad84e204604efc70b49b634d6134741f1d361077c7f87d7b830812f",
+      "keycloak": "sha256:fa9e52214f01bab88bdd85fd9337c9308050c7f8117addbaa0ded840e11217ca",
+      "admin-console": "sha256:13990e1efa16dcb0692c52fc26aba56305edabf22bdaf20f563762741ef7e357"
+    },
+    "third_party_digests": {
+      "kafka 4.1.2": "sha256:5cc2a2fd93fa2687b44015eee04fb2c3edd9e526bd64bf8bec5ff1e268772e0e",
+      "redis 8.2.1-alpine": "sha256:987c376c727652f99625c7d205a1cba3cb2c53b92b0b62aade2bd48ee1593232",
+      "postgres 17.11-alpine (psql toolbox)": "sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0"
+    },
+    "replicas": {"erp-core": 2, "event-relay": 2, "edge-gateway": 2, "stream-projection": 1, "integration-adapter": 1},
+    "erp_core": {"requests": "100m / 512Mi", "limits": "2 CPU / 1Gi", "db_pool": 10, "kafka_session_timeout": "10s (ADR 0011 default)"},
+    "pdb": "maxUnavailable 1 per component",
+    "rolling_update": "maxUnavailable 0, maxSurge 1",
+    "termination": "terminationGracePeriodSeconds 45, preStop sleep 10 s, server.shutdown=graceful"
+  },
+  "test_client": {
+    "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/loadgen:t20261124-1",
+    "digest": "sha256:89044d0af40730808540f251f8a6d717191962d8aeb390d848fc2ec4907d999b",
+    "dockerfile": "tests/performance/kubernetes/loadgen.Dockerfile",
+    "base": "eclipse-temurin:21-jre-noble (OpenJDK 21.0.13)",
+    "jmeter": "5.6.3, archive.apache.org, SHA-512 checked at build (5978a1a3...689083)",
+    "k6": "v1.8.2 linux-arm64, GitHub release, SHA-256 checked at build (8b4e5502...e0d7)",
+    "pod": "materialflow-loadgen/loadgen on the loadgen node, requests 1 CPU / 1.5Gi, limits 2 CPU / 2.5Gi"
+  },
+  "operator_machine": {
+    "role": "kubectl, helm, az and the drill scripts (Linux server, amd64)",
+    "python": "3.14.4",
+    "helm": "v4.3.2",
+    "latency": "kubectl exec psql round trip 0.8-0.9 s, kafka-consumer-groups.sh 4 s, kubectl get pod 0.4 s; ICMP to the public IP 27-37 ms"
+  }
+}

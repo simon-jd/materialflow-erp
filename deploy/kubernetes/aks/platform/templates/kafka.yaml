@@ -1,0 +1,149 @@
+# Single KRaft broker+controller on a managed-csi (Standard SSD) disk, so committed events survive
+# pod restarts and rescheduling. Same listener layout as Compose and kind (PLAINTEXT, in-cluster only).
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  selector: {app: kafka}
+  ports:
+    - {name: kafka, port: 9092, targetPort: 9092}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  serviceName: kafka
+  replicas: 1
+  selector:
+    matchLabels: {app: kafka}
+  template:
+    metadata:
+      labels: {app: kafka, app.kubernetes.io/part-of: materialflow}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        {{- include "platform.podSecurity" . | nindent 8 }}
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      initContainers:
+        - name: kafka-config-init
+          image: {{ include "platform.mirror" (dict "root" . "image" .Values.kafka.image) }}
+          command: [sh, -c, "cp -R /opt/kafka/config/. /writable-config/"]
+          securityContext:
+            {{- include "platform.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - {name: config, mountPath: /writable-config}
+      containers:
+        - name: kafka
+          image: {{ include "platform.mirror" (dict "root" . "image" .Values.kafka.image) }}
+          securityContext:
+            {{- include "platform.containerSecurity" . | nindent 12 }}
+          env:
+            - {name: KAFKA_NODE_ID, value: "1"}
+            - {name: KAFKA_PROCESS_ROLES, value: "broker,controller"}
+            - {name: KAFKA_LISTENERS, value: "PLAINTEXT://:9092,CONTROLLER://:9093"}
+            - {name: KAFKA_ADVERTISED_LISTENERS, value: "PLAINTEXT://kafka:9092"}
+            - {name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP, value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"}
+            - {name: KAFKA_CONTROLLER_LISTENER_NAMES, value: CONTROLLER}
+            - {name: KAFKA_INTER_BROKER_LISTENER_NAME, value: PLAINTEXT}
+            - {name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: "1@localhost:9093"}
+            - {name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR, value: "1"}
+            - {name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR, value: "1"}
+            - {name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS, value: "0"}
+            - {name: KAFKA_AUTO_CREATE_TOPICS_ENABLE, value: "true"}
+            # A subdirectory: the volume root holds lost+found, which is not a topic partition.
+            - {name: KAFKA_LOG_DIRS, value: /var/lib/kafka/data/logs}
+            - {name: KAFKA_HEAP_OPTS, value: {{ .Values.kafka.heap | quote }}}
+          ports:
+            - {name: kafka, containerPort: 9092}
+            - {name: controller, containerPort: 9093}
+          readinessProbe:
+            tcpSocket: {port: kafka}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.kafka.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/kafka/data}
+            - {name: config, mountPath: /opt/kafka/config}
+            - {name: logs, mountPath: /opt/kafka/logs}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: config, emptyDir: {}}
+        - {name: logs, emptyDir: {}}
+        - {name: tmp, emptyDir: {}}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: {{ .Values.kafka.storageClass }}
+        resources:
+          requests: {storage: {{ .Values.kafka.storage }}}
+---
+# Same idempotent topic creation as Compose's kafka-init (one partition each: the DLQ recoverer
+# republishes to the same partition number). Kafka Streams must not start against a missing topic.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-topics
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels: {app: kafka-topics, app.kubernetes.io/part-of: materialflow}
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "platform.podSecurity" . | nindent 8 }}
+        runAsUser: 1000
+        runAsGroup: 1000
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: create-topics
+          image: {{ include "platform.mirror" (dict "root" . "image" .Values.kafka.image) }}
+          securityContext:
+            {{- include "platform.containerSecurity" . | nindent 12 }}
+          env:
+            - {name: KAFKA_LOG4J_OPTS, value: "-Dlog4j2.rootLogger.level=WARN"}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list >/dev/null 2>&1; do
+                echo "waiting for kafka:9092"; sleep 5
+              done
+              for topic in {{ join " " .Values.kafka.topics }}; do
+                /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+                  --create --if-not-exists --topic "$topic" --partitions 1 --replication-factor 1
+              done
+              /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe
+          resources:
+            requests: {cpu: 10m, memory: 256Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: logs, mountPath: /opt/kafka/logs}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        - {name: logs, emptyDir: {}}

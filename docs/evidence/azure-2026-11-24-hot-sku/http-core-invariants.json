@@ -1,0 +1,138 @@
+{
+  "runs": 3,
+  "all_hold": true,
+  "results": [
+    {
+      "material_id": "272fe89f-4e85-4501-a494-6ed5ceeb1ea0",
+      "key_prefix": "hot-sku-20261125T001248-run-1",
+      "expected_orders": 450,
+      "metrics": {
+        "on_hand": 1000.000000,
+        "reserved": 1000.000000,
+        "orders": 450,
+        "order_lines": 450,
+        "ordered_quantity": 3150.000000,
+        "allocated_quantity": 1000.000000,
+        "lines_with_allocation": 143,
+        "reservation_quantity": 1000.000000,
+        "reservation_rows": 143,
+        "ledger_reserve_quantity": 1000.000000,
+        "ledger_reserve_rows": 143,
+        "procurement_shortage": 2150.000000,
+        "idempotency_keys": 450,
+        "idempotency_completed": 450,
+        "outbox_events": 450,
+        "credit_reserved": 31500.00,
+        "order_total_amount": 31500.00,
+        "status_counts": {
+          "BACKORDERED": 307,
+          "PARTIALLY_ALLOCATED": 1,
+          "RESERVED": 142
+        }
+      },
+      "checks": {
+        "single_balance_row": true,
+        "reserved_not_above_on_hand": true,
+        "all_stock_or_all_demand_allocated": true,
+        "reserved_equals_line_allocations": true,
+        "reserved_equals_active_reservations": true,
+        "reserved_equals_reserve_ledger": true,
+        "one_reservation_and_ledger_row_per_allocated_line": true,
+        "status_matches_allocation": true,
+        "shortage_has_procurement_suggestion": true,
+        "one_order_per_idempotency_key": true,
+        "one_outbox_event_per_order": true,
+        "credit_reserved_equals_order_totals": true
+      },
+      "holds": true
+    },
+    {
+      "material_id": "4632686e-f381-41e6-ac08-13ce6b7787e4",
+      "key_prefix": "hot-sku-20261125T001306-run-2",
+      "expected_orders": 450,
+      "metrics": {
+        "on_hand": 1000.000000,
+        "reserved": 1000.000000,
+        "orders": 450,
+        "order_lines": 450,
+        "ordered_quantity": 3150.000000,
+        "allocated_quantity": 1000.000000,
+        "lines_with_allocation": 143,
+        "reservation_quantity": 1000.000000,
+        "reservation_rows": 143,
+        "ledger_reserve_quantity": 1000.000000,
+        "ledger_reserve_rows": 143,
+        "procurement_shortage": 2150.000000,
+        "idempotency_keys": 450,
+        "idempotency_completed": 450,
+        "outbox_events": 450,
+        "credit_reserved": 31500.00,
+        "order_total_amount": 31500.00,
+        "status_counts": {
+          "BACKORDERED": 307,
+          "PARTIALLY_ALLOCATED": 1,
+          "RESERVED": 142
+        }
+      },
+      "checks": {
+        "single_balance_row": true,
+        "reserved_not_above_on_hand": true,
+        "all_stock_or_all_demand_allocated": true,
+        "reserved_equals_line_allocations": true,
+        "reserved_equals_active_reservations": true,
+        "reserved_equals_reserve_ledger": true,
+        "one_reservation_and_ledger_row_per_allocated_line": true,
+        "status_matches_allocation": true,
+        "shortage_has_procurement_suggestion": true,
+        "one_order_per_idempotency_key": true,
+        "one_outbox_event_per_order": true,
+        "credit_reserved_equals_order_totals": true
+      },
+      "holds": true
+    },
+    {
+      "material_id": "6dbcd5fa-2c13-459e-808f-3fa237d6d480",
+      "key_prefix": "hot-sku-20261125T001325-run-3",
+      "expected_orders": 450,
+      "metrics": {
+        "on_hand": 1000.000000,
+        "reserved": 1000.000000,
+        "orders": 450,
+        "order_lines": 450,
+        "ordered_quantity": 3150.000000,
+        "allocated_quantity": 1000.000000,
+        "lines_with_allocation": 143,
+        "reservation_quantity": 1000.000000,
+        "reservation_rows": 143,
+        "ledger_reserve_quantity": 1000.000000,
+        "ledger_reserve_rows": 143,
+        "procurement_shortage": 2150.000000,
+        "idempotency_keys": 450,
+        "idempotency_completed": 450,
+        "outbox_events": 450,
+        "credit_reserved": 31500.00,
+        "order_total_amount": 31500.00,
+        "status_counts": {
+          "BACKORDERED": 307,
+          "PARTIALLY_ALLOCATED": 1,
+          "RESERVED": 142
+        }
+      },
+      "checks": {
+        "single_balance_row": true,
+        "reserved_not_above_on_hand": true,
+        "all_stock_or_all_demand_allocated": true,
+        "reserved_equals_line_allocations": true,
+        "reserved_equals_active_reservations": true,
+        "reserved_equals_reserve_ledger": true,
+        "one_reservation_and_ledger_row_per_allocated_line": true,
+        "status_matches_allocation": true,
+        "shortage_has_procurement_suggestion": true,
+        "one_order_per_idempotency_key": true,
+        "one_outbox_event_per_order": true,
+        "credit_reserved_equals_order_totals": true
+      },
+      "holds": true
+    }
+  ]
+}

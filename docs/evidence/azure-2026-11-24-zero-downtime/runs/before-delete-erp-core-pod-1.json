@@ -1,0 +1,93 @@
+{
+ "disruption": "delete-erp-core-pod",
+ "disruption_duration_ms": 22127,
+ "steady_seconds": 60,
+ "bucket_seconds": 15,
+ "threshold_factor": 2,
+ "steady_threshold_p95_ms": 58,
+ "total": {
+  "requests": 3073,
+  "failed": 0,
+  "non_2xx": 0,
+  "no_response": 0,
+  "status_counts": {
+   "201": 3073
+  },
+  "error_codes": {},
+  "p50_ms": 24,
+  "p95_ms": 39,
+  "p99_ms": 59,
+  "max_ms": 2101
+ },
+ "windows": {
+  "steady": {
+   "requests": 900,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 900
+   },
+   "error_codes": {},
+   "p50_ms": 23,
+   "p95_ms": 29,
+   "p99_ms": 34,
+   "max_ms": 59
+  },
+  "disruption": {
+   "requests": 331,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 331
+   },
+   "error_codes": {},
+   "p50_ms": 28,
+   "p95_ms": 43,
+   "p99_ms": 56,
+   "max_ms": 62
+  },
+  "after": {
+   "requests": 1374,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1374
+   },
+   "error_codes": {},
+   "p50_ms": 25,
+   "p95_ms": 45,
+   "p99_ms": 78,
+   "max_ms": 2101
+  }
+ },
+ "p95_ratio_disruption_to_steady": 1.48,
+ "p99_ratio_disruption_to_steady": 1.65,
+ "time_to_steady_ms": 0,
+ "time_to_steady_after_finish_ms": 0,
+ "first_failure_ms": null,
+ "last_failure_ms": null,
+ "failures": [],
+ "k6": {
+  "dropped_iterations": 0,
+  "iterations": 3073,
+  "vus_max": 40
+ },
+ "orders": {
+  "orders": 3074,
+  "completed_idempotency_keys": 3074,
+  "reserved": 3074.0,
+  "acknowledged_201": 3073
+ },
+ "run": "before-delete-erp-core-pod-1",
+ "timeline": [
+  "2026-11-24T21:37:25.879Z load-start",
+  "2026-11-24T21:38:57.864Z disruption-start delete-erp-core-pod",
+  "2026-11-24T21:38:57.554Z deleting materialflow-erp-core-d76bbccf9-htfxp",
+  "2026-11-24T21:39:09.619Z deleted materialflow-erp-core-d76bbccf9-htfxp",
+  "2026-11-24T21:39:19.938Z disruption-finished delete-erp-core-pod",
+  "2026-11-24T21:40:49.963Z load-stop"
+ ]
+}

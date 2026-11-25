@@ -28,9 +28,10 @@ spec:
         runAsUser: 101
         runAsGroup: 101
         seccompProfile: {type: RuntimeDefault}
+      {{- include "materialflow.placement" (dict "root" . "name" "materialflow-admin-console") | nindent 6 }}
       containers:
         - name: admin-console
-          image: "{{ .Values.global.imageRegistry }}/admin-console:{{ .Values.global.imageTag }}"
+          image: "{{ .Values.global.imageRegistry }}/admin-console:{{ required "global.imageTag is required" .Values.global.imageTag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           ports:
             - {name: http, containerPort: {{ $console.port }}}
@@ -45,6 +46,7 @@ spec:
           livenessProbe:
             httpGet: {path: /healthz, port: http}
             periodSeconds: 20
+          {{- include "materialflow.preStop" . | nindent 10 }}
           resources:
             {{- toYaml $console.resources | nindent 12 }}
           securityContext:
