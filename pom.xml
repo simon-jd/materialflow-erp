@@ -53,7 +53,7 @@
         <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
         <jackson-bom.version>3.1.7</jackson-bom.version>
         <postgresql.version>42.7.12</postgresql.version>
-        <grpc.version>1.75.0</grpc.version>
+        <grpc.version>1.84.0</grpc.version>
         <!-- OTel's generated classes require >= 4.32; keep protoc and runtime aligned. -->
         <protobuf.version>4.33.5</protobuf.version>
         <jacoco.version>0.8.13</jacoco.version>
