@@ -26,7 +26,7 @@ jobs:
         run: python3 -m unittest discover -s tests/performance -p 'test_*.py'
       - name: Upload test and coverage evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: |
@@ -92,7 +92,7 @@ jobs:
           exit-code: '1'
       - name: Preserve image scan evidence
         if: always() && hashFiles('trivy-results.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with: {name: image-scan, path: trivy-results.sarif}
       - uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('trivy-results.sarif') != '' && (!github.event.repository.private || vars.CODE_SCANNING_ENABLED == 'true')
@@ -109,5 +109,5 @@ jobs:
         env: {GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
       - name: Generate CycloneDX SBOM
         run: mvn -B -ntp -DskipTests org.cyclonedx:cyclonedx-maven-plugin:2.9.1:makeAggregateBom
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: {name: sbom, path: target/bom.*}
