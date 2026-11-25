@@ -1,0 +1,91 @@
+{
+ "disruption": "rollout-edge-gateway",
+ "disruption_duration_ms": 46508,
+ "steady_seconds": 60,
+ "bucket_seconds": 15,
+ "threshold_factor": 2,
+ "steady_threshold_p95_ms": 62,
+ "total": {
+  "requests": 3423,
+  "failed": 0,
+  "non_2xx": 0,
+  "no_response": 0,
+  "status_counts": {
+   "201": 3423
+  },
+  "error_codes": {},
+  "p50_ms": 24,
+  "p95_ms": 38,
+  "p99_ms": 82,
+  "max_ms": 2862
+ },
+ "windows": {
+  "steady": {
+   "requests": 900,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 900
+   },
+   "error_codes": {},
+   "p50_ms": 22,
+   "p95_ms": 31,
+   "p99_ms": 41,
+   "max_ms": 80
+  },
+  "disruption": {
+   "requests": 698,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 698
+   },
+   "error_codes": {},
+   "p50_ms": 23,
+   "p95_ms": 58,
+   "p99_ms": 1768,
+   "max_ms": 2862
+  },
+  "after": {
+   "requests": 1368,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1368
+   },
+   "error_codes": {},
+   "p50_ms": 26,
+   "p95_ms": 37,
+   "p99_ms": 119,
+   "max_ms": 2141
+  }
+ },
+ "p95_ratio_disruption_to_steady": 1.87,
+ "p99_ratio_disruption_to_steady": 43.12,
+ "time_to_steady_ms": 60000,
+ "time_to_steady_after_finish_ms": 13492,
+ "first_failure_ms": null,
+ "last_failure_ms": null,
+ "failures": [],
+ "k6": {
+  "dropped_iterations": 0,
+  "iterations": 3423,
+  "vus_max": 40
+ },
+ "orders": {
+  "orders": 3423,
+  "completed_idempotency_keys": 3423,
+  "reserved": 3423.0,
+  "acknowledged_201": 3423
+ },
+ "run": "before-rollout-edge-gateway-1",
+ "timeline": [
+  "2026-11-24T21:32:45.460Z load-start",
+  "2026-11-24T21:34:16.715Z disruption-start rollout-edge-gateway",
+  "2026-11-24T21:35:03.222Z disruption-finished rollout-edge-gateway",
+  "2026-11-24T21:36:33.230Z load-stop"
+ ]
+}

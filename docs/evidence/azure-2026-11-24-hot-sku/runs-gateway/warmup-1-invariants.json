@@ -1,0 +1,44 @@
+{
+  "material_id": "956fd3a6-4eb6-4dfc-be26-4fb8f73314ca",
+  "key_prefix": "hot-sku-20261125T000952-warmup-1",
+  "expected_orders": 450,
+  "metrics": {
+    "on_hand": 1000.000000,
+    "reserved": 1000.000000,
+    "orders": 392,
+    "order_lines": 392,
+    "ordered_quantity": 2744.000000,
+    "allocated_quantity": 1000.000000,
+    "lines_with_allocation": 143,
+    "reservation_quantity": 1000.000000,
+    "reservation_rows": 143,
+    "ledger_reserve_quantity": 1000.000000,
+    "ledger_reserve_rows": 143,
+    "procurement_shortage": 1744.000000,
+    "idempotency_keys": 392,
+    "idempotency_completed": 392,
+    "outbox_events": 392,
+    "credit_reserved": 27440.00,
+    "order_total_amount": 27440.00,
+    "status_counts": {
+      "BACKORDERED": 249,
+      "PARTIALLY_ALLOCATED": 1,
+      "RESERVED": 142
+    }
+  },
+  "checks": {
+    "single_balance_row": true,
+    "reserved_not_above_on_hand": true,
+    "all_stock_or_all_demand_allocated": true,
+    "reserved_equals_line_allocations": true,
+    "reserved_equals_active_reservations": true,
+    "reserved_equals_reserve_ledger": true,
+    "one_reservation_and_ledger_row_per_allocated_line": true,
+    "status_matches_allocation": true,
+    "shortage_has_procurement_suggestion": true,
+    "one_order_per_idempotency_key": false,
+    "one_outbox_event_per_order": true,
+    "credit_reserved_equals_order_totals": true
+  },
+  "holds": false
+}

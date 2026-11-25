@@ -225,11 +225,21 @@ POD=$(kubectl -n materialflow get pod -l app.kubernetes.io/name=materialflow-erp
 kubectl -n materialflow exec "$POD" -- sh -c 'kill -KILL $(pidof java)'     # container restarts in place
 ```
 
-The kubelet restarts a killed container immediately the first time; later restarts wait for the
-crash back-off (10 s doubling to 300 s) unless the container ran longer than the current back-off
-since its last restart, and the back-off resets after 10 minutes without a restart. Space repeated
-kills accordingly or record restart delay separately from recovery. Turn the switch off afterwards
+The kubelet restarts a killed container immediately the first time. After that it waits until the
+current crash back-off has passed since the container exited (10 s, doubling to 300 s), however long
+the container ran in between; the back-off resets only when 10 minutes pass between two exits of the
+same container (measured in the [fault-matrix evidence](../evidence/azure-2026-11-24-fault-matrix/README.md):
+successive kills of one pod restarted after 0.5, 10, 23 and 55 s; another pod, killed 11 times in
+53 minutes, reached 302–325 s). Recovery with two replicas did not depend on it. Record restart delay
+separately from recovery, as the matrix does. Turn the switch off afterwards
 (`--set faultInjection.enabled=false`).
+
+The full process-kill matrix (`tests/failure/process-kill-recovery.py --backend kubernetes`) and
+the zero-downtime drill (`tests/failure/kubernetes-zero-downtime.sh`) are described in
+[tests/failure/README.md](../../tests/failure/README.md); the load and contention tests in
+[tests/performance/README.md](../../tests/performance/README.md#running-on-aks). Run them one at a
+time: the cluster has no spare capacity. See [Cloud tests](#cloud-tests) for the order and the
+results.
 
 ## Reset synthetic data
 
@@ -268,9 +278,67 @@ restart Keycloak and erp-core afterwards if they gave up connecting.
 
 ## Upgrades
 
-Auto-upgrade is off because a surge node does not fit the 6-vCPU quota. To upgrade deliberately:
-`az aks nodepool update --max-surge 0 --max-unavailable 1` on each pool, then
-`az aks upgrade --kubernetes-version <v>`; afterwards set `kubernetes_version` in Terraform.
+Auto-upgrade is off because a surge node does not fit the 6-vCPU quota. Do **not** upgrade the app
+pool with `--max-surge 0 --max-unavailable 1`: that drains one of the two app nodes, and the
+[zero-downtime drill](../evidence/azure-2026-11-24-zero-downtime/README.md) showed what follows. The
+remaining node cannot hold the workload (non-DaemonSet pods request about 2.6 vCPU and 9.4 GiB;
+one node has 1.9 vCPU and about 6.6 GiB), and the AKS system pods it has to take run at system
+priority and preempt the application's pods, Kafka and Redis included: a full API outage until the
+node is back. Free the load-generator pool's quota for a surge node instead:
+
+```bash
+A="--subscription $ARM_SUBSCRIPTION_ID -g rg-materialflow-dev --cluster-name aks-materialflow-dev"
+az aks nodepool scale $A -n loadgen --node-count 0
+az aks nodepool update $A -n system --max-surge 1 --max-unavailable 0
+az aks nodepool upgrade $A -n system --kubernetes-version <v>     # or --node-image-only
+az aks nodepool scale $A -n loadgen --node-count 1
+```
+
+Then upgrade the loadgen pool and the control plane, and set `kubernetes_version` in Terraform.
+(This upgrade sequence was not executed; it uses the same capacity as the measured drains below.)
+
+## Node maintenance (N+1)
+
+The same capacity rule holds for any manual drain. Measured procedure (three drains of the node
+hosting erp-core, two with 0 failed requests and one with 21 s of HTTP 503 when the drained node
+hosted Redis):
+
+```bash
+A="--subscription $ARM_SUBSCRIPTION_ID -g rg-materialflow-dev --cluster-name aks-materialflow-dev"
+az aks nodepool scale $A -n loadgen --node-count 0      # frees 2 vCPUs of the 6-vCPU quota
+az aks nodepool scale $A -n system --node-count 3       # the "+1" node, about 2 minutes
+kubectl drain <node> --ignore-daemonsets --delete-emptydir-data --timeout=5m
+# ... maintenance ...
+kubectl uncordon <node>
+az aks nodepool delete-machines $A -n system --machine-names <the extra node>
+az aks nodepool scale $A -n loadgen --node-count 1
+# the loadgen VM is new: re-apply tests/performance/kubernetes/loadgen-pod.yaml if a test client is needed
+```
+
+Redis is a single replica and the gateway fails closed without it (ADR 0004), so a drain of its
+node always costs a few seconds to tens of seconds of 503s. A drain that cannot finish is usually a
+PDB whose replacement pod cannot be scheduled: uncordon, find the Pending pod, and fix capacity
+before retrying. After a drain the placement is skewed (system pods consolidate on the surviving
+node); a later chart rollout can then stall on a surge pod that fits nowhere. Delete the old pods
+of the stuck Deployment one at a time, or delete a relocated system pod so it reschedules.
+
+## Cloud tests
+
+Run one at a time; the cluster has no spare capacity. Results of the 2026-11-24 runs:
+[overview](../evidence/azure-2026-11-24-cloud-tests/README.md).
+
+| Test | How | Needs |
+|---|---|---|
+| Process-kill fault matrix | `tests/failure/process-kill-recovery.py --backend kubernetes` ([README](../../tests/failure/README.md#run-it-on-kubernetes-aks)) | `faultInjection.enabled=true`, then back to false |
+| Zero-downtime operations under load | `tests/failure/kubernetes-zero-downtime.sh` ([README](../../tests/failure/README.md#zero-downtime-operations-under-load-kubernetes)) | loadgen pod; N+1 capacity for `drain-erp-core-node` |
+| Hot-SKU HTTP load | `MATERIALFLOW_HOT_SKU_BACKEND=kubernetes tests/performance/run-hot-sku-orders.sh` ([README](../../tests/performance/README.md#running-on-aks)) | loadgen pod |
+| Locking strategies vs managed PostgreSQL | `tests/performance/kubernetes/run-reservation-contention.sh` ([README](../../tests/performance/README.md#running-on-aks)) | loadgen pod, a dedicated `harness` database and role |
+
+The load-generator image (`tests/performance/kubernetes/loadgen.Dockerfile`) is built once on an
+Arm64 machine and pushed to the registry; `loadgen-pod.yaml` runs it on the tainted pool. Long runs
+should be started on the operator machine with `nohup` and polled, so a dropped SSH session does
+not stop them. Afterwards: `faultInjection.enabled=false`, reset the synthetic data, drop the
+`harness` database and role, and delete the loadgen pod.
 
 ## Teardown
 

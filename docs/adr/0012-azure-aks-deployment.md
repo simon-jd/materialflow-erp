@@ -124,3 +124,30 @@ so its cookies are `Secure`; the route strips client-supplied `X-Forwarded-Host`
   PostgreSQL leaves about $0.05/hour (disks, IPs, registry).
 - This is a disposable test environment with synthetic data, one Kafka broker and no zone
   redundancy (westus has no availability zones). It is not a production design.
+
+## Note, 2026-11-24: what the cloud tests changed
+
+The tests on this environment ([overview](../evidence/azure-2026-11-24-cloud-tests/README.md))
+confirm the choice of AKS for pod-level drills (20 of 20 in-place SIGKILL restarts) and change
+three things:
+
+- **Node maintenance needs N+1 capacity.** Draining one of the two app nodes caused a full API
+  outage: the remaining node cannot hold the workload (about 2.6 vCPU / 9.4 GiB of requests
+  against 1.9 vCPU / 6.6 GiB, with the managed `istiod` replicas alone requesting 1 vCPU / 4 GiB),
+  and the evicted AKS system pods, at system priority, preempted Kafka, Redis and a gateway replica
+  on the other node. Upgrading with `max-surge 0 / max-unavailable 1`, as this ADR first planned,
+  would do the same. Within the 6-vCPU quota the only headroom is the load-generator pool: scale it
+  to 0 and the app pool to 3 for maintenance (runbook, "Node maintenance (N+1)"). With that, two of
+  three measured drains had no failed request.
+- **Redis is the API's single point of failure.** The third drain evicted Redis and the gateway
+  failed closed (ADR 0004) for 21 s. Anything beyond this dev environment needs a replicated Redis
+  (or Azure Managed Redis) before node maintenance can be zero-downtime.
+- **Chart:** the gateway retires pooled upstream connections after 5 s (below the 10 s `preStop`)
+  and topology spread counts only the current ReplicaSet (`matchLabelKeys`); both came from failed
+  requests during rollouts and drains
+  ([zero-downtime evidence](../evidence/azure-2026-11-24-zero-downtime/README.md)).
+
+The burstable nodes never ran out of CPU credits in these tests (≤ 45% one-minute CPU under the
+hot-SKU bursts); the cost of the cloud shows up instead as database round trips and commit
+latency on the hot inventory row (3–4× the local serialized time per order) and as 1–2 s WAL-write
+stalls on the 32 GiB P4 disk (120 baseline IOPS). A larger disk tier is the lever if those matter.

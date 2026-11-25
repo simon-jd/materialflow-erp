@@ -1,0 +1,170 @@
+{
+  "backend": "kubernetes",
+  "kube_context": "aks-materialflow-dev",
+  "namespace": "materialflow",
+  "scope": "Kubernetes namespace with faultInjection.enabled, real JVM SIGKILL, container restarted in place by the kubelet",
+  "started_at": "2026-11-24T20:05:38.424226+00:00",
+  "windows": [
+    "consumer-pre-commit",
+    "consumer-post-commit",
+    "relay-post-ack",
+    "dlq-post-ack"
+  ],
+  "repeat": 1,
+  "images": {
+    "erp-core": [
+      {
+        "pod": "materialflow-erp-core-77cf785854-hrvzj",
+        "node": "aks-system-11841385-vmss000001",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core@sha256:4a20a85caa383d33b3dd6f541734ca0a316f8adee60278a4cbc2a29027f9a64d"
+      },
+      {
+        "pod": "materialflow-erp-core-77cf785854-w9g6j",
+        "node": "aks-system-11841385-vmss000001",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/erp-core@sha256:4a20a85caa383d33b3dd6f541734ca0a316f8adee60278a4cbc2a29027f9a64d"
+      }
+    ],
+    "event-relay": [
+      {
+        "pod": "materialflow-event-relay-59ccb979d8-5g5m9",
+        "node": "aks-system-11841385-vmss000000",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay@sha256:6c435529bd2f602b44a7bf68f1fde0615c2101bfd20b7f6921895be8caaf5b8d"
+      },
+      {
+        "pod": "materialflow-event-relay-59ccb979d8-8bc9t",
+        "node": "aks-system-11841385-vmss000000",
+        "image": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay:b20261124-1",
+        "image_id": "acrmaterialflowdevbrpzh.azurecr.io/materialflow/event-relay@sha256:6c435529bd2f602b44a7bf68f1fde0615c2101bfd20b7f6921895be8caaf5b8d"
+      }
+    ]
+  },
+  "status": "passed",
+  "totals": {
+    "runs": 4,
+    "sigkills": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "per_window": {
+    "consumer-pre-commit": {
+      "number": 1,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 16093,
+        "max": 16093,
+        "min": 16093
+      },
+      "restart_to_recovered_ms": {
+        "p50": 12651,
+        "max": 12651,
+        "min": 12651
+      },
+      "container_running_ms": {
+        "p50": 3442,
+        "max": 3442,
+        "min": 3442
+      },
+      "container_ready_ms": {
+        "p50": 22446,
+        "max": 22446,
+        "min": 22446
+      },
+      "failures": []
+    },
+    "consumer-post-commit": {
+      "number": 2,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 14342,
+        "max": 14342,
+        "min": 14342
+      },
+      "restart_to_recovered_ms": {
+        "p50": 3039,
+        "max": 3039,
+        "min": 3039
+      },
+      "container_running_ms": {
+        "p50": 11303,
+        "max": 11303,
+        "min": 11303
+      },
+      "container_ready_ms": {
+        "p50": 27752,
+        "max": 27752,
+        "min": 27752
+      },
+      "failures": []
+    },
+    "relay-post-ack": {
+      "number": 3,
+      "service": "event-relay",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 16065,
+        "max": 16065,
+        "min": 16065
+      },
+      "restart_to_recovered_ms": {
+        "p50": 5128,
+        "max": 5128,
+        "min": 5128
+      },
+      "container_running_ms": {
+        "p50": 10937,
+        "max": 10937,
+        "min": 10937
+      },
+      "container_ready_ms": {
+        "p50": 26696,
+        "max": 26696,
+        "min": 26696
+      },
+      "failures": []
+    },
+    "dlq-post-ack": {
+      "number": 4,
+      "service": "erp-core",
+      "runs": 1,
+      "sigkills": 1,
+      "passed": 1,
+      "failed": 0,
+      "recovery_ms": {
+        "p50": 13942,
+        "max": 13942,
+        "min": 13942
+      },
+      "restart_to_recovered_ms": {
+        "p50": -11952,
+        "max": -11952,
+        "min": -11952
+      },
+      "container_running_ms": {
+        "p50": 25894,
+        "max": 25894,
+        "min": 25894
+      },
+      "container_ready_ms": {
+        "p50": 42222,
+        "max": 42222,
+        "min": 42222
+      },
+      "failures": []
+    }
+  },
+  "finished_at": "2026-11-24T20:10:06.040614+00:00"
+}

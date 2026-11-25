@@ -1,0 +1,95 @@
+{
+ "disruption": "drain-erp-core-node",
+ "disruption_duration_ms": 67990,
+ "steady_seconds": 60,
+ "bucket_seconds": 15,
+ "threshold_factor": 2,
+ "steady_threshold_p95_ms": 74,
+ "total": {
+  "requests": 3758,
+  "failed": 0,
+  "non_2xx": 0,
+  "no_response": 0,
+  "status_counts": {
+   "201": 3758
+  },
+  "error_codes": {},
+  "p50_ms": 24,
+  "p95_ms": 46,
+  "p99_ms": 92,
+  "max_ms": 2850
+ },
+ "windows": {
+  "steady": {
+   "requests": 900,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 900
+   },
+   "error_codes": {},
+   "p50_ms": 25,
+   "p95_ms": 37,
+   "p99_ms": 62,
+   "max_ms": 174
+  },
+  "disruption": {
+   "requests": 1019,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1019
+   },
+   "error_codes": {},
+   "p50_ms": 22,
+   "p95_ms": 55,
+   "p99_ms": 94,
+   "max_ms": 2850
+  },
+  "after": {
+   "requests": 1381,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1381
+   },
+   "error_codes": {},
+   "p50_ms": 25,
+   "p95_ms": 41,
+   "p99_ms": 52,
+   "max_ms": 247
+  }
+ },
+ "p95_ratio_disruption_to_steady": 1.49,
+ "p99_ratio_disruption_to_steady": 1.52,
+ "time_to_steady_ms": 75000,
+ "time_to_steady_after_finish_ms": 7010,
+ "first_failure_ms": null,
+ "last_failure_ms": null,
+ "failures": [],
+ "k6": {
+  "dropped_iterations": 0,
+  "iterations": 3758,
+  "vus_max": 40
+ },
+ "orders": {
+  "orders": 3759,
+  "completed_idempotency_keys": 3759,
+  "reserved": 3759.0,
+  "acknowledged_201": 3758
+ },
+ "run": "after-nplus1-drain-erp-core-node-3",
+ "timeline": [
+  "2026-11-24T23:59:15.101Z load-start",
+  "2026-11-25T00:00:46.328Z disruption-start drain-erp-core-node",
+  "2026-11-25T00:00:47.763Z draining aks-system-11841385-vmss000001 (erp-core pods: aks-system-11841385-vmss000002 aks-system-11841385-vmss000001)",
+  "2026-11-25T00:01:22.543Z drained aks-system-11841385-vmss000001",
+  "2026-11-25T00:01:41.457Z erp-core rollout status returned while aks-system-11841385-vmss000001 cordoned",
+  "2026-11-25T00:01:42.604Z uncordoned aks-system-11841385-vmss000001",
+  "2026-11-25T00:01:54.327Z disruption-finished drain-erp-core-node",
+  "2026-11-25T00:03:25.238Z load-stop"
+ ]
+}

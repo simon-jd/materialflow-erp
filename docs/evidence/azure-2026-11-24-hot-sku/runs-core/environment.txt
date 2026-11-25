@@ -1,0 +1,30 @@
+started_utc=2026-11-25T00:12:24Z
+backend=kubernetes target=core host=materialflow-erp-core.materialflow.svc.cluster.local port=8080 warmup_runs=1 runs=3 threads=100 waves=5 duplicates=10 customers=50 quantity=7 stock=1000 pause_ms=0
+NAME                              STATUS   ROLES    AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                    KERNEL-VERSION             CONTAINER-RUNTIME
+aks-loadgen-25938360-vmss000001   Ready    <none>   5m50s   v1.37.1   10.42.0.6     <none>        Microsoft Azure Linux 3.0   6.6.159.1-2.azl3 (arm64)   containerd://2.2.4
+aks-system-11841385-vmss000000    Ready    <none>   5h24m   v1.37.1   10.42.0.4     <none>        Microsoft Azure Linux 3.0   6.6.159.1-2.azl3 (arm64)   containerd://2.2.4
+aks-system-11841385-vmss000001    Ready    <none>   5h24m   v1.37.1   10.42.0.5     <none>        Microsoft Azure Linux 3.0   6.6.159.1-2.azl3 (arm64)   containerd://2.2.4
+NAME                                               READY   STATUS    RESTARTS   AGE     IP             NODE                             NOMINATED NODE   READINESS GATES
+jaeger-57fc5475fb-2pmc8                            1/1     Running   0          6m48s   10.244.0.60    aks-system-11841385-vmss000001   <none>           <none>
+kafka-0                                            1/1     Running   0          11m     10.244.1.58    aks-system-11841385-vmss000000   <none>           <none>
+keycloak-c5f845444-krlms                           1/1     Running   0          11m     10.244.1.204   aks-system-11841385-vmss000000   <none>           <none>
+materialflow-admin-console-877459746-4nf2v         1/1     Running   0          11m     10.244.1.131   aks-system-11841385-vmss000000   <none>           <none>
+materialflow-admin-console-877459746-x5cr5         1/1     Running   0          6m51s   10.244.0.3     aks-system-11841385-vmss000001   <none>           <none>
+materialflow-edge-gateway-5d8c545b65-cnt5r         1/1     Running   0          11m     10.244.1.193   aks-system-11841385-vmss000000   <none>           <none>
+materialflow-edge-gateway-5d8c545b65-fqwn8         1/1     Running   0          6m50s   10.244.0.14    aks-system-11841385-vmss000001   <none>           <none>
+materialflow-erp-core-6494dffd84-ct49q             1/1     Running   0          3m16s   10.244.0.86    aks-system-11841385-vmss000001   <none>           <none>
+materialflow-erp-core-6494dffd84-wfb77             1/1     Running   0          3m16s   10.244.1.170   aks-system-11841385-vmss000000   <none>           <none>
+materialflow-event-relay-b75586b86-kxw7d           1/1     Running   0          3m16s   10.244.1.51    aks-system-11841385-vmss000000   <none>           <none>
+materialflow-event-relay-b75586b86-wdwql           1/1     Running   0          3m16s   10.244.0.36    aks-system-11841385-vmss000001   <none>           <none>
+materialflow-integration-adapter-9496d4b7c-kds9z   1/1     Running   0          11m     10.244.1.84    aks-system-11841385-vmss000000   <none>           <none>
+materialflow-stream-projection-6d78dc56f4-qh4ss    1/1     Running   0          6m49s   10.244.0.65    aks-system-11841385-vmss000001   <none>           <none>
+materialflow-toolbox-7487548448-qq6hp              1/1     Running   0          6m48s   10.244.0.168   aks-system-11841385-vmss000001   <none>           <none>
+redis-6fcc8d8667-x462g                             1/1     Running   0          6m48s   10.244.0.10    aks-system-11841385-vmss000001   <none>           <none>
+Linux loadgen 6.6.159.1-2.azl3 #1 SMP Tue Oct 27 03:52:45 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+openjdk version "21.0.13" 2026-10-20 LTS
+OpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)
+jmeter=5.6.3
+NAME      READY   STATUS    RESTARTS   AGE     IP            NODE                              NOMINATED NODE   READINESS GATES
+loadgen   1/1     Running   0          4m39s   10.244.2.45   aks-loadgen-25938360-vmss000001   <none>           <none>
+completed_utc=2026-11-25T00:13:42Z

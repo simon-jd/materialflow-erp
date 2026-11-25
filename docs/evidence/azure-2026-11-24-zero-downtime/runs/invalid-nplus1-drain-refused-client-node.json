@@ -1,0 +1,105 @@
+{
+ "disruption": "drain-erp-core-node",
+ "disruption_duration_ms": 10144,
+ "steady_seconds": 60,
+ "bucket_seconds": 15,
+ "threshold_factor": 2,
+ "steady_threshold_p95_ms": 70,
+ "total": {
+  "requests": 2891,
+  "failed": 1,
+  "non_2xx": 1,
+  "no_response": 0,
+  "status_counts": {
+   "201": 2890,
+   "503": 1
+  },
+  "error_codes": {
+   "1503": 1
+  },
+  "p50_ms": 25,
+  "p95_ms": 41,
+  "p99_ms": 83,
+  "max_ms": 2167
+ },
+ "windows": {
+  "steady": {
+   "requests": 900,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 900
+   },
+   "error_codes": {},
+   "p50_ms": 24,
+   "p95_ms": 35,
+   "p99_ms": 44,
+   "max_ms": 83
+  },
+  "disruption": {
+   "requests": 152,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 152
+   },
+   "error_codes": {},
+   "p50_ms": 25,
+   "p95_ms": 37,
+   "p99_ms": 43,
+   "max_ms": 230
+  },
+  "after": {
+   "requests": 1382,
+   "failed": 0,
+   "non_2xx": 0,
+   "no_response": 0,
+   "status_counts": {
+    "201": 1382
+   },
+   "error_codes": {},
+   "p50_ms": 24,
+   "p95_ms": 39,
+   "p99_ms": 55,
+   "max_ms": 230
+  }
+ },
+ "p95_ratio_disruption_to_steady": 1.06,
+ "p99_ratio_disruption_to_steady": 0.98,
+ "time_to_steady_ms": 0,
+ "time_to_steady_after_finish_ms": 0,
+ "first_failure_ms": -88354,
+ "last_failure_ms": -88354,
+ "failures": [
+  {
+   "at_ms": -88354,
+   "status": 503,
+   "error_code": 1503,
+   "wall_ms": 365
+  }
+ ],
+ "k6": {
+  "dropped_iterations": 0,
+  "iterations": 2891,
+  "vus_max": 40
+ },
+ "orders": {
+  "orders": 2891,
+  "completed_idempotency_keys": 2891,
+  "reserved": 2891.0,
+  "acknowledged_201": 2890
+ },
+ "run": "invalid-nplus1-drain-refused-client-node",
+ "timeline": [
+  "2026-11-24T23:49:36.623Z load-start",
+  "2026-11-24T23:51:07.784Z disruption-start drain-erp-core-node",
+  "2026-11-24T23:51:08.765Z draining aks-system-11841385-vmss000002 (erp-core pods: aks-system-11841385-vmss000000 aks-system-11841385-vmss000002)",
+  "2026-11-24T23:51:10.642Z drain of aks-system-11841385-vmss000002 did not complete within 5m",
+  "2026-11-24T23:51:11.129Z erp-core rollout status returned while aks-system-11841385-vmss000002 cordoned",
+  "2026-11-24T23:51:12.202Z uncordoned aks-system-11841385-vmss000002",
+  "2026-11-24T23:51:17.928Z disruption-finished drain-erp-core-node",
+  "2026-11-24T23:52:48.776Z load-stop"
+ ]
+}

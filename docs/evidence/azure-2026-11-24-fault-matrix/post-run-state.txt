@@ -1,0 +1,13 @@
+Tue Nov 24 09:19:28 PM UTC 2026
+fixture_triggers|0
+fixture_functions|0
+lock_holders|0
+advisory_waiters|0
+outbox_PUBLISHED|24
+fixture_orders|14
+fixture_orders_RESERVED|14
+
+GROUP                    TOPIC                         PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                              HOST            CLIENT-ID
+erp-core-reallocation-v1 materialflow.domain-events.v1 0          52              52              0               consumer-erp-core-reallocation-v1-1-22c62a91-739c-4e0b-b54a-9ba04b6c4cbb /10.244.0.154   consumer-erp-core-reallocation-v1-1
+materialflow.domain-events.v1.DLQ:0:12
+6

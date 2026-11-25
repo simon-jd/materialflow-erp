@@ -95,3 +95,15 @@ listener container index to a configured identity, so `erp-core-0` registered as
 These are observations from one workstation, not a recovery SLA. Production
 timeouts must be chosen against measured GC pauses and CPU throttling on the
 target platform.
+
+## Note, 2026-11-24: two replicas on AKS
+
+The same drill ran on AKS with two erp-core replicas and the kubelet restarting the killed
+container ([evidence](../evidence/azure-2026-11-24-fault-matrix/README.md)). All 15 consumer-window
+kills recovered in 9.8–16.4 s, every time on the *surviving* replica once the killed member's 10 s
+session had expired, while the kubelet's crash back-off held the killed container's restart back
+for 0.5 to 325 s. In a Deployment with two or more replicas, failure detection, not the restart,
+bounds consumer recovery, which is the case this ADR's 10 s default was chosen for. It also
+confirms that static membership would bring nothing in a Deployment: the same pod rejoins only
+after its back-off, long after its session (and its claim on the partition) has expired. The
+decision stands.
