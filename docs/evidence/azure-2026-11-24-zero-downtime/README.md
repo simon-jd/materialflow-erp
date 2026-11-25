@@ -31,8 +31,10 @@ Measured; per-run detail below. In every run, orders in PostgreSQL = completed i
    connections; pooled connections bypass both. Fix: the gateway retires pooled upstream
    connections after 5 s (`spring.cloud.gateway.server.webflux.httpclient.pool.max-life-time`),
    well inside the 10 s `preStop` window, so by SIGTERM no pooled connection to the old pod is left.
-   No `PrematureCloseException` in the six rollout and delete runs after the fix (gateway logs
-   retained).
+   It is a race: it hit once in the three before-fix runs that replaced erp-core pods, and the six
+   rollout and delete runs after the fix logged no `PrematureCloseException` (gateway logs
+   retained). Six clean runs do not prove the race gone; the fix removes its precondition (a pooled
+   connection older than the `preStop` window), which is the argument for it.
 2. **Hot-row convoys reach erp-core's 3 s connection timeout (not fixed; residual risk).** The other
    five 500s of that run came from erp-core itself at +53.5 s: `HikariPool-1 - Connection is not
    available, request timed out after 3001ms (total=10, active=10, idle=0, waiting=18)`. All orders
