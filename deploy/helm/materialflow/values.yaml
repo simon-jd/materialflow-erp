@@ -4,6 +4,9 @@ global:
   imagePullPolicy: IfNotPresent
   existingSecret: materialflow-runtime
   otelEndpoint: http://otel-collector:4318/v1/traces
+  # Default for every Deployment; a component (or adminConsole) can override it with its own
+  # rollingUpdate. Surge keeps full capacity during a rollout when the cluster has room for it.
+  rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
   # Pod placement for every Deployment in the chart.
   nodeSelector: {}
   tolerations: []

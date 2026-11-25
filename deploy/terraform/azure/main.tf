@@ -22,12 +22,17 @@ locals {
   public_url  = "https://${local.public_host}"
 
   # Kubernetes names shared by Terraform (federated credentials) and the Helm values it renders.
-  app_namespace       = "materialflow"
-  app_sa              = "materialflow"
-  platform_sa         = "materialflow-platform"
-  oidc_token_issuer   = "https://token.actions.githubusercontent.com"
-  azure_ad_audience   = "api://AzureADTokenExchange"
-  github_oidc_subject = "repo:${var.github_repository}:environment:${var.github_environment}"
+  app_namespace     = "materialflow"
+  app_sa            = "materialflow"
+  platform_sa       = "materialflow-platform"
+  oidc_token_issuer = "https://token.actions.githubusercontent.com"
+  azure_ad_audience = "api://AzureADTokenExchange"
+  # GitHub repositories with immutable OIDC subjects (`use_immutable_subject`) put the owner and
+  # repository IDs into the subject: repo:<owner>@<owner_id>/<repo>@<repo_id>:environment:<env>.
+  github_subject_repository = var.github_repository_ids == null ? var.github_repository : format(
+    "%s@%d/%s@%d", split("/", var.github_repository)[0], var.github_repository_ids.owner_id,
+  split("/", var.github_repository)[1], var.github_repository_ids.repository_id)
+  github_oidc_subject = "repo:${local.github_subject_repository}:environment:${var.github_environment}"
 }
 
 resource "azurerm_resource_group" "this" {
