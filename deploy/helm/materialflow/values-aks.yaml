@@ -18,6 +18,14 @@ global:
   otelEndpoint: http://jaeger:4318/v1/traces
   nodeSelector: {workload: app}
   spreadAcrossNodes: true
+  # No surge on this cluster: AKS add-ons leave too little requestable CPU and memory for a
+  # surge pod per Deployment, and Helm rolls every Deployment at once. On 2026-11-25 the first
+  # cd-azure run failed because a surge edge-gateway pod could not be scheduled (node CPU 99%
+  # and memory 96% requested); --rollback-on-failure restored the previous release. Replacing
+  # one pod at a time keeps one ready replica of every two-replica service (gateway, erp-core,
+  # event-relay, console); the single-replica stream-projection and integration-adapter restart
+  # in place, which delays projections and synthetic integrations but not the order API.
+  rollingUpdate: {maxUnavailable: 1, maxSurge: 0}
   preStopSleepSeconds: 10
   # Arm64 B-series nodes start a Spring Boot JVM in 30-90 s; allow up to 5 minutes.
   startupFailureThreshold: 60
