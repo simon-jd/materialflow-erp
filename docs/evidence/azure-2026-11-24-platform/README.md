@@ -24,7 +24,7 @@ Labels follow the repository convention: **measured** (observed in this run), **
 | 10 | Flyway on the managed server | 7 of 7 migrations `success = t` on PostgreSQL 17.11 (installed by `mfadmin`), before and after a database reset | measured |
 | 11 | Fault-injection chart switch | without it, `kill -KILL 1` from `kubectl exec` is ignored (JVM is PID 1); with it, SIGKILL of the JVM restarts the container in place (same pod and IP, exit 137, restart count 1) for erp-core and event-relay | measured, n = 1 each |
 | 12 | NetworkPolicy (Cilium) | pod in `default` cannot reach erp-core (timeout); pod in `materialflow-loadgen` on the loadgen node can | measured, n = 1 each |
-| 13 | GitHub Actions `cd-azure` | actionlint 1.7.12: 0 findings on all workflows; not run (needs repository variables) | measured / not run |
+| 13 | GitHub Actions `cd-azure` | actionlint 1.7.12: 0 findings. Ran on 2026-11-25: the first run failed twice (OIDC subject, then a surge pod that could not be scheduled and was rolled back automatically); after both fixes a push-triggered run deployed commit 815d124 end to end in 6 min 39 s (section 13) | measured, n = 1 successful run |
 
 ## Method
 
@@ -190,8 +190,18 @@ about 1.0 and 1.5 GiB of memory left to request, while actual use was 165-176 m 
 ### 13. Delivery pipeline
 
 `.github/workflows/cd-azure.yml` passes actionlint 1.7.12 (with shellcheck) like the other
-workflows. It has not run: it needs the repository variables from
-`terraform output github_actions_variables`, which the lead sets. The deploy identity's Kubernetes
+workflows. On 2026-11-25 the lead set the repository variables from
+`terraform output github_actions_variables` and created the `azure-dev` environment, and the
+workflow ran against this environment (measured, GitHub Actions run logs):
+
+| Run | Trigger | Result | Cause and fix |
+|---|---|---|---|
+| [45531055833](https://github.com/simon-jd/materialflow-erp/actions/runs/45531055833) attempt 1 | `workflow_dispatch` on 2fb0217 | build and test passed; image push failed at `azure/login` | AADSTS700213: the repository uses GitHub's immutable OIDC subjects, so the token said `repo:simon-jd@276495489/materialflow-erp@1368743399:environment:azure-dev`. The federated credential now builds that subject from `github_repository_ids` (Terraform: 1 resource changed, nothing else) |
+| [45531055833](https://github.com/simon-jd/materialflow-erp/actions/runs/45531055833) attempt 2 | re-run of failed jobs | images pushed; Helm upgrade failed after 12 min and **rolled back automatically** to the previous revision | a surge edge-gateway pod could not be scheduled (`0/3 nodes are available: 1 Insufficient cpu, 1 Insufficient memory, 1 untolerated taint`; app nodes at 99% CPU and 96% memory requested, mostly AKS add-ons). The chart's rollout strategy is now a value; AKS uses `maxSurge: 0, maxUnavailable: 1` |
+| [45533718166](https://github.com/simon-jd/materialflow-erp/actions/runs/45533718166) | push of 815d124 to main | success in 6 min 39 s: build and test 3 min 07 s, Arm64 image push 1 min 28 s, Helm upgrade and public smoke test 1 min 55 s | all six application Deployments then ran image tag `815d124…` with 2/2 or 1/1 ready; an authenticated `GET /api/v1/orders` through the public URL returned 200 |
+
+After the run the lead deleted the `AZURE_CLIENT_ID` repository variable, so pushes skip the
+workflow again while the cluster is stopped; setting it again re-enables deployment. The deploy identity's Kubernetes
 permissions could not be exercised from here: Azure RBAC refuses impersonation with the `oid`
 extra (`kubectl auth can-i --as`), see `raw/cd-identity-can-i.txt`. Derived instead: every kind
 the application chart renders (Deployment, Service, ConfigMap, ServiceAccount, NetworkPolicy,
@@ -211,9 +221,8 @@ is why they live in the operator-installed platform chart.
 
 ## Not done
 
-- `cd-azure` was not executed (no GitHub variables; changing repository settings was out of
-  scope). The first application release was installed by the operator with the same chart and
-  values the workflow uses.
+- The first application releases were installed by the operator with the same chart and values
+  the workflow uses; `cd-azure` ran later (section 13).
 - No load or fault-matrix runs; those belong to the next agent.
 
 ## Reproduce
