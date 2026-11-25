@@ -54,8 +54,10 @@ limit of this environment.
   scheduler processes the 25 oldest expired orders and lets the exception end the batch, so while
   those orders were first in line, 13,306 expired reservations of other orders were not released
   (measured, `inventory_reservations` at 23:41 UTC). The fixtures are unrealistic, but one order that
-  cannot be released should not stop all expiries. Not fixed here (application code, outside this
-  work); the data reset removed the fixtures.
+  cannot be released should not stop all expiries. The data reset removed the fixtures. Fixed afterwards in
+  `ReservationExpiryScheduler`: a failing order is retried with exponential backoff (1 to 30 minutes)
+  instead of ending the batch, covered by `ReservationExpirySchedulerTest`; the fix has not been
+  re-run on AKS.
 - **Relay dead-lettering during an outage.** During the 78 minutes in which Kafka was unscheduled
   after the first drain, the relay moved 11 outbox events to `DEAD_LETTER` after its retries.
 - **Cost data lag.** Cost Management returned no rows for the two resource groups during the whole
